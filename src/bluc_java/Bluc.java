@@ -15,6 +15,8 @@
  */
 package bluc_java;
 
+import java.io.PrintStream;
+
 /**
  *
  * @author john
@@ -23,8 +25,26 @@ public class Bluc
 {
     public static void main(String[] args)
     {
-        // TODO code application logic here
-        System.out.println("test");
+        if (args.length == 0)
+        {
+            Bluc.printHelp(System.out);
+            return;
+        }
+        
+        var equalsIndex = args[0].indexOf("=");
+        var filePath = args[0].substring(equalsIndex + 1);
+        var lexer = new Lexer();
+        
+        var tokens = lexer.lexFile(filePath);
+        for (var token : tokens)
+        {
+            System.out.print(token.getText() + ", ");
+        }
     }
-
+    
+    private static void printHelp(PrintStream out)
+    {
+        out.println("-f= flag: \t\t-f=fileNameHere\t\twhere fileNameHere is " +
+                "the file to compile");
+    }
 }

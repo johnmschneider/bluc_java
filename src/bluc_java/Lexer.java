@@ -15,6 +15,7 @@
  */
 package bluc_java;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -40,11 +41,16 @@ public class Lexer
     public ArrayList<Token> lexFile(String filePath)
     {
         var lexedTokens = new ArrayList<Token>();
+        var absoluteFilePath = new File(filePath).getAbsolutePath();
+        
+        this.state.setFilePath(absoluteFilePath);
         
         try
         {
             var allLinesOfFile = 
-                    Files.readAllLines(Paths.get(filePath));
+                    Files.readAllLines(Paths.get(absoluteFilePath));
+            
+            allLinesOfFile = this.addNewlinesBackToFileContents(allLinesOfFile);
             lexedTokens = this.lex(allLinesOfFile, this.state);
         } 
         catch (IOException ex)
@@ -56,31 +62,64 @@ public class Lexer
         return lexedTokens;
     }
     
+    /**
+     * Adds newlines back to the contents of the file. This simplifies the
+     *  lexing of the file, so that we can just split on white space.
+     * 
+     * @return The contents of the file with \n added at the
+     *  end of each line.
+     */
+    private ArrayList<String> addNewlinesBackToFileContents(
+        List<String> currentContentsOfFile)
+    {
+        var contentsWithNewline = new ArrayList<String>();
+        
+        for (var line : currentContentsOfFile)
+        {
+            var lineWithNewline = line + "\n";
+            contentsWithNewline.add(lineWithNewline);
+        }
+        
+        return contentsWithNewline;
+    }
+    
     private ArrayList<Token> lex(
         List<String> allLinesOfFile,
         LexerState state)
     {
         var commentsRemover = new CommentsRemover();
+        var linesOfFile = commentsRemover.run(allLinesOfFile);
         
-        allLinesOfFile = commentsRemover.run(allLinesOfFile);
+        state.appendLexedToken(Token.BLUC_SOF);
         
-        state.addLexedToken(Token.BLUC_SOF);
-        
-        for (var line : allLinesOfFile)
+        for (var line : linesOfFile)
         {
+            state.setLine(line);
+            
             this.lexLine(this.state);
+            
+            state.incrementLineNum();
         }
+        
+        state.appendLexedToken(Token.BLUC_EOF);
         
         return state.getLexedTokens();
     }
+    
+
     
     private void lexLine(LexerState state)
     {
         state.setColumn(1);
         
-        for (var curChar : state.getLine().toCharArray())
+        var lineAsArray = state.getLine().toCharArray();
+        
+        for (int column = 1; column <= lineAsArray.length; column++)
         {
+            var curChar = lineAsArray[column - 1];
+            
             state.setCurChar(curChar);
+            state.setColumn(column);
             
             if (curChar == '"')
             {
@@ -97,11 +136,7 @@ public class Lexer
     {
         if (!state.isInString())
         {
-            state.appendTokenIfNotWhitespace();
-
-            state.setWordSoFarToCurChar();
-            state.appendTokenIfNotWhitespace();
-            
+            state.appendCurCharToWordSoFar();
             state.prepareForNextToken(
                 true,
                 false,
@@ -110,9 +145,7 @@ public class Lexer
         }
         else if (!state.isLastCharWasEscape())
         {
-            state.appendTokenIfNotWhitespace();
-
-            state.setWordSoFarToCurChar();
+            state.appendCurCharToWordSoFar();
             state.appendTokenIfNotWhitespace();
             
             state.prepareForNextToken(
@@ -169,7 +202,29 @@ public class Lexer
             state.resetWordSoFar();
             state.setCheckNextToken(false);
         }
+        else if (state.curCharMatchesAny(
+                    new char[]{'+', '-', '*', '/', '%', '=', '!',
+                        '<', '>', '|', '&', '^'}))
+        {
+            if (state.isCheckNextToken())
+            {
+                state.appendCurCharToWordSoFar();
+                state.appendTokenIfNotWhitespace();
+                
+                state.resetWordSoFar();
+                state.setCheckNextToken(false);
+            }
+            else
+            {
+                state.appendTokenIfNotWhitespace();
+                
+                state.setWordSoFarToCurChar();
+                state.setCheckNextToken(true);
+            }
+        }
+        else
+        {
+            state.appendCurCharToWordSoFar();
+        }
     }
-    
-
 }

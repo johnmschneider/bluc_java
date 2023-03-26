@@ -31,6 +31,9 @@ public class Token
     public static final Token BLUC_SOF =
         new Token(null, -1, -1, "__BLUC_SOF__");
     
+    public static final Token BLUC_EOF =
+        new Token(null, -1, -1, "__BLUC_EOF__");
+    
     @Getter
     @Setter
     private String filePath;

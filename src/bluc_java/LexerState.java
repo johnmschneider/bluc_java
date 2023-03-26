@@ -24,6 +24,9 @@ import lombok.Setter;
  */
 public class LexerState
 {
+    /**
+     * The tokens that we have lexed so far.
+     */
     @Getter
     private ArrayList<Token> lexedTokens;
     
@@ -96,12 +99,13 @@ public class LexerState
         this.lexedTokens = new ArrayList<>();
         this.lineNum = 1;
         this.checkNextToken = false;
+        this.resetWordSoFar();
     }
     
     /**
      * Adds a token to <see cref="lexedTokens/>
      */
-    public void addLexedToken(Token token)
+    public void appendLexedToken(Token token)
     {
         this.lexedTokens.add(token);
     }
@@ -174,13 +178,17 @@ public class LexerState
             token.setColumn(this.getColumn());
             token.setText(wordSoFar);
             
-            this.addLexedToken(token);
+            this.appendLexedToken(token);
         }
     }
     
     /**
      * Prepares the lexer state to lex a new token after it's just finished
      *  lexing a token.
+     * 
+     * It's not a requirement to call this method specifically, this is only
+     *  a utility method. You can call the setters of the individual booleans
+     *  if you need to.
      */
     public void prepareForNextToken(
         boolean inString,
@@ -196,5 +204,13 @@ public class LexerState
         {
             this.resetWordSoFar();
         }
+    }
+    
+    /**
+     * Adds 1 to the line number.
+     */
+    public void incrementLineNum()
+    {
+        this.setLineNum(this.getLineNum() + 1);
     }
 }
