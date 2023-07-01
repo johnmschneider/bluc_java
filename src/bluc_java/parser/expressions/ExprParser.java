@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package bluc_java.parser;
+package bluc_java.parser.expressions;
 
 /**
- * Represents the current state of the parser.
+ * Logic for parsing expressions.
  */
-public class ParserState
+public class ExprParser
 {
     
 }

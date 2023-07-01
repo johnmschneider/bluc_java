@@ -37,7 +37,7 @@ public class ExprPrinter implements Expr.Visitor<String>
     @Override
     public String visitLiteralExpr(Expr.Literal expr)
     {
-        // Not a mistake, we want to literally print "null" if this is a null
+        // Not a typo, we want to literally print "null" if this is a null
         //  literal.
         var output = "null";
         
@@ -52,7 +52,8 @@ public class ExprPrinter implements Expr.Visitor<String>
     @Override
     public String visitUnaryExpr(Expr.Unary expr)
     {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return parenthesize(
+            expr.getOperator().getText(), expr.getRight());
     }
 
     private String parenthesize(String name, Expr... exprs)
@@ -68,5 +69,10 @@ public class ExprPrinter implements Expr.Visitor<String>
         builder.append(")");
 
         return builder.toString();
+    }
+    
+    public String print(Expr expr)
+    {
+        return expr.accept(this);
     }
 }

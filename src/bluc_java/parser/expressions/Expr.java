@@ -16,7 +16,6 @@
 package bluc_java.parser.expressions;
 
 import bluc_java.Token;
-import bluc_java.parser.ParserState;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,7 +26,7 @@ import lombok.Setter;
 public abstract class Expr
 {
     @AllArgsConstructor
-    public class Binary
+    public static class Binary extends Expr
     {
         @Getter
         @Setter
@@ -40,10 +39,15 @@ public abstract class Expr
         @Getter
         @Setter
         private Expr right;
+        
+        public <T> T accept(Visitor<T> visitor)
+        {
+            return visitor.visitBinaryExpr(this);
+        }
     }
     
     @AllArgsConstructor
-    public class Grouping
+    public static class Grouping extends Expr
     {
         @Getter
         @Setter
@@ -56,18 +60,28 @@ public abstract class Expr
         @Getter
         @Setter
         private Expr closeParenthesis;
+        
+        public <T> T accept(Visitor<T> visitor)
+        {
+            return visitor.visitGroupingExpr(this);
+        }
     }
     
     @AllArgsConstructor
-    public class Literal
+    public static class Literal extends Expr
     {
         @Getter
         @Setter
         private Token value;
+        
+        public <T> T accept(Visitor<T> visitor)
+        {
+            return visitor.visitLiteralExpr(this);
+        }
     }
     
     @AllArgsConstructor
-    public class Unary
+    public static class Unary extends Expr
     {
         @Getter
         @Setter
@@ -76,6 +90,11 @@ public abstract class Expr
         @Getter
         @Setter
         private Expr right;
+        
+        public <T> T accept(Visitor<T> visitor)
+        {
+            return visitor.visitUnaryExpr(this);
+        }
     }
     
     public interface Visitor<T>

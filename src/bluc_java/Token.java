@@ -44,10 +44,38 @@ public class Token
     
     @Getter
     @Setter
-    private int column;
+    private int columnNum;
     
     @Getter
     @Setter
     private String text;
+
+    /**
+     * Returns true if this.text .equals any string in
+     *  textsToMatch.
+     */
+    public boolean matchesAny(String[] textsToMatch)
+    {
+        var matches = false;
+        var tokenText = this.getText();
+        
+        for (var textToMatch : textsToMatch)
+        {
+            if (tokenText.equals(textToMatch))
+            {
+                matches = true;
+                break;
+            }
+        }
+        
+        return matches;
+    }
     
+    /**
+     * Returns true if this.text .equals textToMatch.
+     */
+    public boolean matches(String textToMatch)
+    {
+        return this.matchesAny(new String[]{textToMatch});
+    }
 }

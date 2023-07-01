@@ -15,11 +15,12 @@
  */
 package bluc_java;
 
+import bluc_java.parser.expressions.Expr;
+import bluc_java.parser.expressions.ExprPrinter;
 import java.io.PrintStream;
 
 /**
- *
- * @author john
+ * Main class of the program.
  */
 public class Bluc
 {
@@ -40,6 +41,20 @@ public class Bluc
         {
             System.out.print(token.getText() + ", ");
         }
+
+        var expression = new Expr.Binary(
+            new Expr.Unary(
+                new Token(null, -1, -1, "-"),
+                new Expr.Literal(
+                    new Token(null, -1, -1, "123"))),
+            new Token(null, -1, -1, "*"),
+            new Expr.Grouping(
+                null,
+                new Expr.Literal(
+                    new Token(null, -1, 01, "45.67")),
+                null));
+
+        System.out.println("\n\nAST:\n" + new ExprPrinter().print(expression));
     }
     
     private static void printHelp(PrintStream out)
