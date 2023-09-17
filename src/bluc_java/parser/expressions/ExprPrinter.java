@@ -24,14 +24,14 @@ public class ExprPrinter implements Expr.Visitor<String>
     @Override
     public String visitBinaryExpr(Expr.Binary expr)
     {
-        return parenthesize(expr.getOperator().getText(),
-                        expr.getLeft(), expr.getRight());
+        return parenthesize(expr.operator().text(),
+                        expr.left(), expr.right());
     }
 
     @Override
     public String visitGroupingExpr(Expr.Grouping expr)
     {
-        return parenthesize("group", expr.getInnerExpr());
+        return parenthesize("group", expr.innerExpr());
     }
 
     @Override
@@ -41,9 +41,9 @@ public class ExprPrinter implements Expr.Visitor<String>
         //  literal.
         var output = "null";
         
-        if (expr.getValue() != null)
+        if (expr.value() != null)
         {
-            return expr.getValue().getText();
+            return expr.value().text();
         }
         
         return output;
@@ -53,7 +53,7 @@ public class ExprPrinter implements Expr.Visitor<String>
     public String visitUnaryExpr(Expr.Unary expr)
     {
         return parenthesize(
-            expr.getOperator().getText(), expr.getRight());
+            expr.operator().text(), expr.right());
     }
 
     private String parenthesize(String name, Expr... exprs)
@@ -71,7 +71,7 @@ public class ExprPrinter implements Expr.Visitor<String>
         return builder.toString();
     }
     
-    public String print(Expr expr)
+    public String printToString(Expr expr)
     {
         return expr.accept(this);
     }

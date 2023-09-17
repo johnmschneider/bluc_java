@@ -39,7 +39,7 @@ public class Bluc
         var tokens = lexer.lexFile(filePath);
         for (var token : tokens)
         {
-            System.out.print(token.getText() + ", ");
+            System.out.print(token.text() + ", ");
         }
 
         var expression = new Expr.Binary(
@@ -53,8 +53,9 @@ public class Bluc
                 new Expr.Literal(
                     new Token(null, -1, 01, "45.67")),
                 null));
-
-        System.out.println("\n\nAST:\n" + new ExprPrinter().print(expression));
+        
+        var astAsString = new ExprPrinter().printToString(expression);
+        System.out.println("\n\nAST:\n" + astAsString);
     }
     
     private static void printHelp(PrintStream out)

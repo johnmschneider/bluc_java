@@ -21,12 +21,14 @@ package bluc_java;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 
 /**
  * Represents a result after performing an operation that may fail.
  * 
  * Base class of all ResultType's.
  */
+@Accessors(fluent = true)
 public class Result<ErrorType>
 {
     /**
@@ -34,34 +36,55 @@ public class Result<ErrorType>
      */
     @Getter
     @Setter(AccessLevel.PRIVATE)
-    private boolean successful;
+    private boolean hasSucceeded;
     
     /**
-     * The token that caused the error (if an error occurred).
+     * The token that caused the error (if an error occurred). Null otherwise.
      */
     @Getter
-    @Setter
+    @Setter(AccessLevel.PRIVATE)
     private Token errToken;
     
+    /**
+     * The error code of the error (if an error occurred). Null otherwise.
+     */
     @Getter
     private ErrorType errCode;
     
     public Result()
     {
-        this.setSuccessful(true);
+        this.hasSucceeded(true);
     }
     
-    public void setErrCode(ErrorType errCode)
+    /**
+     * @return "true" if the result has failed,
+     *  "false" otherwise.
+     */
+    public boolean hasFailed()
     {
-        this.setSuccessful(false);
-        this.setErrCode(errCode);
+        return !this.hasSucceeded();
+    }
+    
+    /**
+     * Set the error code for this result.
+     * 
+     * If this method is called, the success flag is also set to false.
+     */
+    public void errCode(ErrorType errCode)
+    {
+        this.hasSucceeded(false);
+        this.errCode(errCode);
     }
     
     /**
      * Set both the error token and error code.
+     * 
+     * @param errToken - The token that the error occurred on.
+     * @Param errCode - The error code to set.
      */
-    public void setError(Token errToken, ErrorType errCode)
+    public void error(Token errToken, ErrorType errCode)
     {
-        this.setErrToken(errToken);
+        this.errToken(errToken);
+        this.errCode(errCode);
     }
 }

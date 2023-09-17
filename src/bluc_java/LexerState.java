@@ -115,7 +115,7 @@ public class LexerState
      */
     public void appendCurCharToWordSoFar()
     {
-        this.setWordSoFar(this.getWordSoFar() + this.getCurChar());
+        this.wordSoFar(this.wordSoFar() + this.curChar());
     }
     
     /**
@@ -123,7 +123,7 @@ public class LexerState
      */
     public boolean curCharIsWhitespace()
     {
-        return Character.isWhitespace(this.getCurChar());
+        return Character.isWhitespace(this.curChar());
     }
     
     /**
@@ -131,7 +131,7 @@ public class LexerState
      */
     public boolean curCharMatchesAny(char[] charsToMatch)
     {
-        var curChar = this.getCurChar();
+        var curChar = this.curChar();
         var charFound = false;
         
         for (var charToSearch : charsToMatch)
@@ -151,7 +151,7 @@ public class LexerState
      */
     public void setWordSoFarToCurChar()
     {
-        this.setWordSoFar("" + this.getCurChar());
+        this.wordSoFar("" + this.curChar());
     }
     
     /**
@@ -159,7 +159,7 @@ public class LexerState
      */
     public void resetWordSoFar()
     {
-        this.setWordSoFar("");
+        this.wordSoFar("");
     }
     
     /**
@@ -168,15 +168,15 @@ public class LexerState
      */
     public void appendTokenIfNotWhitespace()
     {
-        var wordSoFar = this.getWordSoFar();
+        var wordSoFar = this.wordSoFar();
         
         if (!wordSoFar.isBlank())
         {
             var token = new Token();
-            token.setFilePath(this.getFilePath());
-            token.setLineNum(this.getLineNum());
-            token.setColumn(this.getColumn());
-            token.setText(wordSoFar);
+            token.filePath(this.filePath());
+            token.lineNum(this.lineNum());
+            token.columnNum(this.column());
+            token.text(wordSoFar);
             
             this.appendLexedToken(token);
         }
@@ -196,9 +196,9 @@ public class LexerState
         boolean lastCharWasEscape,
         boolean resetWordSoFar)
     {
-        this.setInString(inString);
-        this.setCheckNextToken(checkNextToken);
-        this.setLastCharWasEscape(lastCharWasEscape);
+        this.inString(inString);
+        this.checkNextToken(checkNextToken);
+        this.lastCharWasEscape(lastCharWasEscape);
         
         if (resetWordSoFar)
         {
@@ -211,6 +211,6 @@ public class LexerState
      */
     public void incrementLineNum()
     {
-        this.setLineNum(this.getLineNum() + 1);
+        this.lineNum(this.lineNum() + 1);
     }
 }

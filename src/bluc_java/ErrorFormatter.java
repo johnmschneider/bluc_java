@@ -16,42 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package bluc_java.parser.expressions;
-
-import bluc_java.parser.Parser;
-import bluc_java.parser.expressions.Expr.Binary;
+package bluc_java;
 
 /**
- * Parses "==".
+ *
+ * @author john
  */
-public class EqualityParser extends ExprSubParser
+public class ErrorFormatter
 {
-
-    public EqualityParser(Parser parser, ExprParser exprParser)
+    /**
+     * Formats a string for when the compiler is in an invalid state (i.e., for
+     *  logging compiler bugs / 'impossible' states).
+     * 
+     * All compiler errors are fatal errors.
+     */
+    public static String FormatCompilerError(String methodName, String message)
     {
-        super(parser, exprParser);
+        return "\n" + methodName + "; FATAL COMPILER ERROR: " + message;
     }
-
-    @Override
-    public ExprSubParser createNewSubParser(
-        Parser parser,
-        ExprParser exprParser)
-    {
-        return new EqualityParser(parser, exprParser);
-    }
-
-    @Override
-    public Expr parse()
-    {
-        var parser = this.parser();
-        Binary result = null;
-        
-        if (parser.currentTokenMatches("=="))
-        {
-            
-        }
-        
-        return result;
-    }
-    
 }

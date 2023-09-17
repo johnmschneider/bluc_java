@@ -16,42 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package bluc_java.parser.expressions;
+package bluc_java;
 
-import bluc_java.parser.Parser;
-import bluc_java.parser.expressions.Expr.Binary;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
- * Parses "==".
+ *
+ * @author john
  */
-public class EqualityParser extends ExprSubParser
+public class ResultType<ErrorType, DataType> extends Result<ErrorType>
 {
-
-    public EqualityParser(Parser parser, ExprParser exprParser)
-    {
-        super(parser, exprParser);
-    }
-
-    @Override
-    public ExprSubParser createNewSubParser(
-        Parser parser,
-        ExprParser exprParser)
-    {
-        return new EqualityParser(parser, exprParser);
-    }
-
-    @Override
-    public Expr parse()
-    {
-        var parser = this.parser();
-        Binary result = null;
-        
-        if (parser.currentTokenMatches("=="))
-        {
-            
-        }
-        
-        return result;
-    }
-    
+    @Getter
+    @Setter
+    private DataType data;
 }

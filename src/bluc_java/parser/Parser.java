@@ -15,12 +15,13 @@
  */
 package bluc_java.parser;
 
+import bluc_java.ErrorFormatter;
 import bluc_java.Result;
 import bluc_java.Token;
+import bluc_java.Utils;
 import bluc_java.parser.statements.Stmt;
 import java.util.ArrayList;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -43,12 +44,11 @@ public class Parser
     @Getter
     @Setter(AccessLevel.PRIVATE)
     private int currentTokenIndex;
-            
+    
     /**
      * The current token that the parser is processing.
      */
     @Getter
-    @Setter
     private Token currentToken;
     
     /**
@@ -74,12 +74,7 @@ public class Parser
     
     public String getCurTokenText()
     {
-        return this.getCurrentToken().getText();
-    }
-    
-    public boolean curTokTextEquals(String textToMatch)
-    {
-        return this.getCurTokenText().equals(textToMatch);
+        return this.currentToken().text();
     }
     
     /**
@@ -94,11 +89,11 @@ public class Parser
      */
     public Token peek(int offset)
     {
-        var lexedTokens = this.getLexedTokens();
+        var lexedTokens = this.lexedTokens();
         
         // The index of the last element in lexedTokens.
         var lexedTokensLastIndex = lexedTokens.size() - 1;
-        var peekedTokenIndex = this.getCurrentTokenIndex() + offset;
+        var peekedTokenIndex = this.currentTokenIndex() + offset;
         
         if (peekedTokenIndex < 0)
         {
@@ -150,7 +145,15 @@ public class Parser
      */
     public boolean currentTokenMatches(String[] textsToMatch)
     {
-        return this.getCurrentToken().matchesAny(textsToMatch);
+        return this.currentToken().matchesAny(textsToMatch);
+    }
+    
+    /**
+     * Returns true if the current token matches the given string.
+     */
+    public boolean currentTokenMatches(String textToMatch)
+    {
+        return this.currentToken().matches(textToMatch);
     }
     
     /**
@@ -158,7 +161,7 @@ public class Parser
      */
     public int currentLineNum()
     {
-        return this.getCurrentToken().getLineNum();
+        return this.currentToken().lineNum();
     }
     
     /**
@@ -166,7 +169,7 @@ public class Parser
      */
     public int currentColumnNum()
     {
-        return this.getCurrentToken().getColumnNum();
+        return this.currentToken().columnNum();
     }
     
     /**
@@ -174,7 +177,7 @@ public class Parser
      */
     public String currentTokenText()
     {
-        return this.getCurrentToken().getText();
+        return this.currentToken().text();
     }
     
     /**
@@ -183,19 +186,19 @@ public class Parser
      */
     public void setCurrentToken(int index)
     {
-        var lexedTokens = this.getLexedTokens();
-        var startLineNum = this.getCurrentToken().getLineNum();
+        var lexedTokens = this.lexedTokens();
+        var startLineNum = this.currentToken().lineNum();
         
         index = this.wrapTokenIndex(index);
         
-        this.setCurrentTokenIndex(index);
+        this.currentTokenIndex(index);
         this.currentToken = lexedTokens.get(index);
         
-        if (this.currentToken.getLineNum() != startLineNum)
+        if (this.currentToken.lineNum() != startLineNum)
         {
             // Reset our multi-line statement flag as we're on a
             //  different line now
-            this.setMultilineStmt(false);
+            this.isMultilineStmt(false);
         }
     }
     
@@ -205,7 +208,7 @@ public class Parser
      */
     private int wrapTokenIndex(int index)
     {
-        var lexedTokens = this.getLexedTokens();
+        var lexedTokens = this.lexedTokens();
         var endIndex = lexedTokens.size() - 1;
         
         if (index < 0)
@@ -225,7 +228,7 @@ public class Parser
      */
     public Token getTokenAt(int index)
     {
-        var lexedTokens = this.getLexedTokens();
+        var lexedTokens = this.lexedTokens();
         
         index = this.wrapTokenIndex(index);
         
@@ -234,35 +237,49 @@ public class Parser
         return token;
     }
     
-    public Result nextToken()
+    public Result<NextTokenErrCode> nextToken()
     {
-        var outcome = new Result<String>();
-        
-        this.setCurrentToken(this.getCurrentTokenIndex() + 1);
-        
-        if (this.isMultilineStmt())
+        var result
+            = new Result<NextTokenErrCode>();
+        var advanceResult
+            = this.advanceParser();
+
+        if (advanceResult.hasFailed())
         {
-            if (!this.currentTokenText().isBlank())
-            {
-                var errorMessage =
-                    "Expected nothing or whitespace after " +
-                    "multi-line separator, found `" + this.currentTokenText() +
-                    "` instead.";
-                
-                outcome.setError(
-                    this.getCurrentToken(),
-                    errorMessage);
-            }
-            else
-            {
-                // TODO - continue converting the py implementation
-                //  starting at line 133 of parser.py
-                if (this.atEOL())
-                {
-                    
-                }
-            }
+            result = Parser.castToNextTokenError(advanceResult);
         }
+        
+        return result;
+    }
+    
+    /**
+     * Advances the parser to the next token, but doesn't perform any additional
+     *  checks/handling that "nextToken" does.
+     * 
+     * This should generally not be used, except for classes closely related to
+     *  the parser itself.
+     * 
+     * @return the result of running the method, and any error data (if an error
+     *  was encountered).
+     */
+    public Result<AdvanceParserErrCode> advanceParser()
+    {
+        var result = new Result<AdvanceParserErrCode>();
+        
+        var newTokenIndex = this.currentTokenIndex + 1;
+        
+        
+        if (newTokenIndex >= this.lexedTokens.size())
+        {
+            result.error(this.currentToken(),
+                        AdvanceParserErrCode.AT_EOF);
+        }
+        else
+        {
+            this.setCurrentToken(newTokenIndex);
+        }
+        
+        return result;
     }
     
     /**
@@ -271,14 +288,14 @@ public class Parser
      */
     public boolean atEOF()
     {
-        return this.getCurrentToken() == Token.BLUC_EOF;
+        return this.currentToken() == Token.BLUC_EOF;
     }
     
     /**
      * Returns "true" if the current token is the last token of this line
      *  of the file, returns "false" otherwise.
      */
-    public boolean atEOL()
+    public boolean atEndOfLine()
     {
         if (this.atEOF())
         {
@@ -288,6 +305,108 @@ public class Parser
         var peekedToken         = this.peek(1);
         var currentLineNumber   = this.currentLineNum();
         
-        return peekedToken.getLineNum() != currentLineNumber;
+        return peekedToken.lineNum() != currentLineNumber;
+    }
+    
+    /**
+     * @return "true" if the current token is the first token of the line,
+     *  "false" otherwise.
+     */
+    public boolean atStartOfLine()
+    {
+        if (this.currentTokenIndex == 0)
+        {
+            return true;
+        }
+        
+        var peekedToken         = this.peek(-1);
+        var currentLineNumber   = this.currentLineNum();
+        
+        return peekedToken.lineNum() != currentLineNumber;
+    }
+    
+    /**
+     * Takes the error code of a Result<AdvanceParserErrCode> and converts it to
+     *  a Result<NextTokenErrCode>.
+     * 
+     * @return The converted Result.
+     */
+    public static Result<NextTokenErrCode> castToNextTokenError(
+        Result<AdvanceParserErrCode> advanceResult)
+    {
+        var result
+                = new Result<NextTokenErrCode>();
+
+        if (advanceResult.hasFailed())
+        {
+            var advanceErrCode 
+                = advanceResult
+                .errCode();
+
+            var asNextTokenErrCode
+                = NextTokenErrCode
+                .castToNextTokenError(advanceErrCode);
+
+            result.error(advanceResult.errToken(),
+                        asNextTokenErrCode);
+        }
+
+        return result;
+    }
+    
+    public enum NextTokenErrCode
+    {
+        /**
+         * Indicates that tokens were found on the same line *after* the
+         *  multi-line delimiter was encountered for that line.
+         */
+        TOKENS_AFTER_MUTLILINE_DELIMITER,
+        
+        /**
+         * Indicates that the parser reached the end of the file when it was
+         *  expecting more tokens.
+         */
+        AT_EOF,
+        
+        /**
+         * Indicates a fatal compiler error that occurred as a result of an
+         *  unknown ResultType failure code.
+         */
+        FATAL_UNKNOWN_ERROR;
+        
+        @Getter
+        @Setter
+        private String errorMessage;
+        
+        public static NextTokenErrCode castToNextTokenError(
+            AdvanceParserErrCode error)
+        {
+            NextTokenErrCode castedError;
+            
+            switch (error)
+            {
+                case AT_EOF:
+                    castedError =  NextTokenErrCode.AT_EOF;
+                    
+                default:
+                    // This should never happen, so embed the function name in
+                    //  the error message.
+                    var errorMessage = ErrorFormatter.FormatCompilerError(
+                        Utils.getCurrentMethodName(),
+                                
+                        "Unknown AdvancedParserError type `" + error.name()
+                        + "`");
+                    
+                    castedError = NextTokenErrCode.FATAL_UNKNOWN_ERROR;
+                    castedError.errorMessage(errorMessage);
+            }
+            
+            return castedError;
+        }
+    }
+    
+    public enum AdvanceParserErrCode
+    {
+        AT_EOF;
     }
 }

@@ -16,42 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package bluc_java.parser.expressions;
-
-import bluc_java.parser.Parser;
-import bluc_java.parser.expressions.Expr.Binary;
+package bluc_java;
 
 /**
- * Parses "==".
+ *
+ * @author john
  */
-public class EqualityParser extends ExprSubParser
+public class Utils
 {
-
-    public EqualityParser(Parser parser, ExprParser exprParser)
+    /**
+     * Returns a fully-qualified method name (with class attached).
+     */
+    public static String getCurrentMethodName()
     {
-        super(parser, exprParser);
-    }
-
-    @Override
-    public ExprSubParser createNewSubParser(
-        Parser parser,
-        ExprParser exprParser)
-    {
-        return new EqualityParser(parser, exprParser);
-    }
-
-    @Override
-    public Expr parse()
-    {
-        var parser = this.parser();
-        Binary result = null;
+        final StackTraceElement e = Thread.currentThread().getStackTrace()[3];
+        final String s = e.getClassName();
         
-        if (parser.currentTokenMatches("=="))
-        {
-            
-        }
-        
-        return result;
+        return s + "." + e.getMethodName();
     }
-    
 }

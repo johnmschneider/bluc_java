@@ -43,7 +43,7 @@ public class Lexer
         var lexedTokens = new ArrayList<Token>();
         var absoluteFilePath = new File(filePath).getAbsolutePath();
         
-        this.state.setFilePath(absoluteFilePath);
+        this.state.filePath(absoluteFilePath);
         
         try
         {
@@ -94,7 +94,7 @@ public class Lexer
         
         for (var line : linesOfFile)
         {
-            state.setLine(line);
+            state.line(line);
             
             this.lexLine(this.state);
             
@@ -103,23 +103,23 @@ public class Lexer
         
         state.appendLexedToken(Token.BLUC_EOF);
         
-        return state.getLexedTokens();
+        return state.lexedTokens();
     }
     
 
     
     private void lexLine(LexerState state)
     {
-        state.setColumn(1);
+        state.column(1);
         
-        var lineAsArray = state.getLine().toCharArray();
+        var lineAsArray = state.line().toCharArray();
         
         for (int column = 1; column <= lineAsArray.length; column++)
         {
             var curChar = lineAsArray[column - 1];
             
-            state.setCurChar(curChar);
-            state.setColumn(column);
+            state.curChar(curChar);
+            state.column(column);
             
             if (curChar == '"')
             {
@@ -134,7 +134,7 @@ public class Lexer
     
     private void lexCharWhenOnAQuote(LexerState state)
     {
-        if (!state.isInString())
+        if (!state.inString())
         {
             state.appendCurCharToWordSoFar();
             state.prepareForNextToken(
@@ -143,7 +143,7 @@ public class Lexer
                 false,
                 false);
         }
-        else if (!state.isLastCharWasEscape())
+        else if (!state.lastCharWasEscape())
         {
             state.appendCurCharToWordSoFar();
             state.appendTokenIfNotWhitespace();
@@ -158,9 +158,9 @@ public class Lexer
     
     private void lexCharWhenNotOnAQuote(LexerState state)
     {
-        state.setLastCharWasEscape(false);
+        state.lastCharWasEscape(false);
         
-        if (state.isInString())
+        if (state.inString())
         {
             this.lexWhenInsideString(state);
         }
@@ -172,9 +172,9 @@ public class Lexer
     
     private void lexWhenInsideString(LexerState state)
     {
-        if (state.getCurChar() == '\\')
+        if (state.curChar() == '\\')
         {
-            state.setLastCharWasEscape(true);
+            state.lastCharWasEscape(true);
         }
         else
         {
@@ -189,7 +189,7 @@ public class Lexer
             state.appendTokenIfNotWhitespace();
             
             state.resetWordSoFar();
-            state.setCheckNextToken(false);
+            state.checkNextToken(false);
         }
         else if (state.curCharMatchesAny(
                     new char[]{'(', ')', '{', '}', '[', ']'}))
@@ -200,26 +200,26 @@ public class Lexer
             state.appendTokenIfNotWhitespace();
             
             state.resetWordSoFar();
-            state.setCheckNextToken(false);
+            state.checkNextToken(false);
         }
         else if (state.curCharMatchesAny(
                     new char[]{'+', '-', '*', '/', '%', '=', '!',
                         '<', '>', '|', '&', '^'}))
         {
-            if (state.isCheckNextToken())
+            if (state.checkNextToken())
             {
                 state.appendCurCharToWordSoFar();
                 state.appendTokenIfNotWhitespace();
                 
                 state.resetWordSoFar();
-                state.setCheckNextToken(false);
+                state.checkNextToken(false);
             }
             else
             {
                 state.appendTokenIfNotWhitespace();
                 
                 state.setWordSoFarToCurChar();
-                state.setCheckNextToken(true);
+                state.checkNextToken(true);
             }
         }
         else

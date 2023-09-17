@@ -57,7 +57,7 @@ public class Token
     public boolean matchesAny(String[] textsToMatch)
     {
         var matches = false;
-        var tokenText = this.getText();
+        var tokenText = this.text();
         
         for (var textToMatch : textsToMatch)
         {
