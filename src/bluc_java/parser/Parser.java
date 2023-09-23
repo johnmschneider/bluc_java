@@ -15,8 +15,9 @@
  */
 package bluc_java.parser;
 
-import bluc_java.ErrorFormatter;
+import bluc_java.LogFormatter;
 import bluc_java.Result;
+import bluc_java.ResultType;
 import bluc_java.Token;
 import bluc_java.Utils;
 import bluc_java.parser.statements.Stmt;
@@ -65,14 +66,34 @@ public class Parser
     @Getter
     @Setter(AccessLevel.PRIVATE)
     private boolean isMultilineStmt;
-            
+    
+    /**
+     * "True" if the .parse function was already called and has completed.
+     * 
+     * Parser objects are single-use so that we don't have to deep copy the AST.
+     */
+    @Getter(AccessLevel.PRIVATE)
+    @Setter(AccessLevel.PRIVATE)
+    private boolean parserAlreadyRan;
+    
+    /**
+     * The sub-parser for statements.
+     */
+    @Getter(AccessLevel.PRIVATE)
+    @Setter(AccessLevel.PRIVATE)
+    private StmtSubparser stmtParser;
+    
+    
     public Parser(ArrayList<Token> lexedTokens)
     {
-        this.lexedTokens = lexedTokens;
-        this.ast = new ArrayList<>();
+        this.lexedTokens        = lexedTokens;
+        this.ast                = new ArrayList<>();
+        this.currentTokenIndex  = 0;
+        this.currentToken       = this.lexedTokens.get(0);
+        this.stmtParser         = new StmtSubparser(this);
     }
     
-    public String getCurTokenText()
+    public String getCurrentTokenText()
     {
         return this.currentToken().text();
     }
@@ -110,15 +131,15 @@ public class Parser
     /**
      * Returns true if peek(1) matches textsToMatch.
      */
-    public boolean peekMatches(String textToMatch)
+    public boolean nextTokenMatches(String textToMatch)
     {
-        return this.peekMatches(new String[]{textToMatch});
+        return this.nextTokenMatches(new String[]{textToMatch});
     }
     
     /**
      * Returns true if peek(1) matches *any* string in textsToMatch.
      */
-    public boolean peekMatches(String[] textsToMatch)
+    public boolean nextTokenMatches(String[] textsToMatch)
     {
         return this.peekMatches(1, textsToMatch);
     }
@@ -354,6 +375,90 @@ public class Parser
         return result;
     }
     
+    /**
+     * Initiate the parsing of a file and any imported modules, imported
+     *  modules of imported modules etc, recursively.
+     * 
+     * @return The result of parsing. <br/><br/>
+     *  If a failure occurred, the error code is returned in the result.
+     *      <br/><br/>
+     *  If the parse succeeded, the AST is returned in the result.
+     */
+    public ParseResult parse()
+    {
+        var result = new ParseResult();
+        
+        if (this.parserAlreadyRan())
+        {
+            result.errCode(ParseResultErrCode.PARSER_ALREADY_RAN);
+            
+            return result;
+        }
+        
+        
+        // Advance off the "start of file" token
+        this.nextToken();
+        
+        while (!this.atEOF())
+        {
+            var stmtResult = this.stmtParser().tryParseStmt();
+            
+            if (stmtResult.hasSucceeded())
+            {
+                this.ast.addAll(stmtResult.data());
+            }
+            else
+            {
+                // Log the error, but keep parsing to try and catch any
+                //  additional errors. We don't currently expect this to fail
+                //  during normal operation, so log it as a fatal error.
+                
+                var fatalMessage
+                    = LogFormatter.formatCompilerError(
+                        Utils.getCurrentMethodName(),
+                        stmtResult.errCode().formattedMessage());
+                
+                System.err.println(fatalMessage);
+            }
+            
+            this.nextToken();
+        }
+        
+        var debugMessage
+            = LogFormatter.formatDebug(
+                Utils.getCurrentMethodName(),
+                "ast ==\n" + this.ast);
+        
+        System.out.println(debugMessage);
+        
+        
+        result.data(this.ast);
+        
+        return result;
+    }
+    
+    /**
+     * Class for restoring the result of the parser function. Shorthand for
+     *  ResultType<ParseResultErrCode, ArrayList<Stmt>>.
+     */
+    public class ParseResult
+            extends ResultType<ParseResultErrCode, ArrayList<Stmt>>
+    {
+        
+    }
+    
+    public enum ParseResultErrCode
+    {
+        /**
+         * Indicates that the .parse function was already called and has
+         *   completed.
+         * 
+         * Parser objects are single-use so that we don't have to deep copy the
+         *   AST.
+         */
+        PARSER_ALREADY_RAN
+    }
+    
     public enum NextTokenErrCode
     {
         /**
@@ -391,7 +496,7 @@ public class Parser
                 default:
                     // This should never happen, so embed the function name in
                     //  the error message.
-                    var errorMessage = ErrorFormatter.FormatCompilerError(
+                    var errorMessage = LogFormatter.formatCompilerError(
                         Utils.getCurrentMethodName(),
                                 
                         "Unknown AdvancedParserError type `" + error.name()

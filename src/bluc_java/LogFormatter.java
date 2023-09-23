@@ -19,10 +19,11 @@
 package bluc_java;
 
 /**
- *
+ * Class for formatting log strings, in preparation for printing to the console.
+ * 
  * @author john
  */
-public class ErrorFormatter
+public class LogFormatter
 {
     /**
      * Formats a string for when the compiler is in an invalid state (i.e., for
@@ -30,8 +31,13 @@ public class ErrorFormatter
      * 
      * All compiler errors are fatal errors.
      */
-    public static String FormatCompilerError(String methodName, String message)
+    public static String formatCompilerError(String methodName, String message)
     {
-        return "\n" + methodName + "; FATAL COMPILER ERROR: " + message;
+        return "{" + methodName + "} - FATAL COMPILER ERROR:\t" + message;
+    }
+    
+    public static String formatDebug(String methodName, String message)
+    {
+        return "{" + methodName + "} - DEBUG:\t" + message;
     }
 }

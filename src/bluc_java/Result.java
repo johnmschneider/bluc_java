@@ -73,7 +73,7 @@ public class Result<ErrorType>
     public void errCode(ErrorType errCode)
     {
         this.hasSucceeded(false);
-        this.errCode(errCode);
+        this.errCode = errCode;
     }
     
     /**
