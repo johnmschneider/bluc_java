@@ -258,16 +258,40 @@ public class Parser
         return token;
     }
     
+    /**
+     * Attempts to advance the parser to the next token. This may fail if we're
+     *  at the end of the file.
+     * 
+     * @return the result of advancing the parser, and an error code if any
+     *  errors occurred.
+     */
     public Result<NextTokenErrCode> nextToken()
+    {
+        return this.nextToken(1);
+    }
+    
+    /**
+     * Attempts to advance the parser `tokensToAdvance` number of tokens ahead.
+     *  This may fail if we're at the end of the file.
+     * 
+     * @return the result of advancing the parser, and an error code if any
+     *  errors occurred.
+     */
+    public Result<NextTokenErrCode> nextToken(int tokensToAdvance)
     {
         var result
             = new Result<NextTokenErrCode>();
-        var advanceResult
-            = this.advanceParser();
+        
+        for (int i = 0; i < tokensToAdvance; i++)
+        {    
+            var advanceResult
+                = this.advanceParser();
 
-        if (advanceResult.hasFailed())
-        {
-            result = Parser.castToNextTokenError(advanceResult);
+            if (advanceResult.hasFailed())
+            {
+                result = Parser.castToNextTokenError(advanceResult);
+                break;
+            }
         }
         
         return result;

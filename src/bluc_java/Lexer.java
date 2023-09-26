@@ -38,20 +38,27 @@ public class Lexer
         this.state = new LexerState();
     }
     
+    /**
+     * Reads the file at the specified file path, then lexes the file.
+     * 
+     * @param filePath - the file to read and lex
+     */
     public ArrayList<Token> lexFile(String filePath)
     {
         var lexedTokens = new ArrayList<Token>();
         var absoluteFilePath = new File(filePath).getAbsolutePath();
         
-        this.state.filePath(absoluteFilePath);
+        this.state().filePath(absoluteFilePath);
         
         try
         {
-            var allLinesOfFile = 
-                    Files.readAllLines(Paths.get(absoluteFilePath));
+            var allLinesOfFile
+                = Files.readAllLines(Paths.get(absoluteFilePath));
             
-            allLinesOfFile = this.addNewlinesBackToFileContents(allLinesOfFile);
-            lexedTokens = this.lex(allLinesOfFile, this.state);
+            allLinesOfFile
+                = this.addNewlinesBackToFileContents(allLinesOfFile);
+            lexedTokens
+                = this.lexFile(allLinesOfFile, this.state());
         } 
         catch (IOException ex)
         {
@@ -83,7 +90,22 @@ public class Lexer
         return contentsWithNewline;
     }
     
-    private ArrayList<Token> lex(
+    /**
+     * Returns the lexed tokens given the specified file contents.<br/><br/>
+     * 
+     * <b>Remarks:</b><br/>&#9;
+     *      This is method is currently only intended for use in
+     *  unit testing.
+     * 
+     * @param allLinesOfFile - the file contents to lex. Each new index
+     *  represents a new line in the file.
+     */
+    public ArrayList<Token> lexFile(List<String> allLinesOfFile)
+    {
+        return this.lexFile(allLinesOfFile, this.state());
+    }
+    
+    private ArrayList<Token> lexFile(
         List<String> allLinesOfFile,
         LexerState state)
     {
@@ -96,7 +118,7 @@ public class Lexer
         {
             state.line(line);
             
-            this.lexLine(this.state);
+            this.lexLine(this.state());
             
             state.incrementLineNum();
         }
@@ -105,8 +127,6 @@ public class Lexer
         
         return state.lexedTokens();
     }
-    
-
     
     private void lexLine(LexerState state)
     {
