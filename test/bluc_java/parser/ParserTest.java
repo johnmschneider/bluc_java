@@ -678,16 +678,13 @@ public class ParserTest
                            "two ounces pepperoni")
                 .build();
         
-        var index = 3;
+        var index = 2;
         var instance = new Parser(testTokens);
         
         instance.setCurrentToken(index);
         
         var result = instance.currentToken();
         
-        // TODO - figure out why the assertion is failing. I have a feeling that
-        //          LexedTokenBuilder is causing an issue with calling
-        //          .addTokens vs .addToken
         assertEquals(expResult, result);
     }
 
@@ -698,13 +695,24 @@ public class ParserTest
     public void testGetTokenAt()
     {
         System.out.println("getTokenAt");
-        int index = 0;
-        Parser instance = null;
-        Token expResult = null;
-        Token result = instance.getTokenAt(index);
+        
+        var testFileName    = "junit4_fake_test.txt";
+        var builder         = new LexedTokenBuilder(testFileName);
+        var expResult
+                = new Token(testFileName, 1, 18, "lunch");
+        
+        var testTokens
+                = builder
+                .addTokens("I am hungry, but")
+                .addToken(expResult)
+                .addTokens("helps")
+                .build();
+        
+        var index = 5;
+        var instance = new Parser(testTokens);
+        var result = instance.getTokenAt(index);
+        
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
 
     /**

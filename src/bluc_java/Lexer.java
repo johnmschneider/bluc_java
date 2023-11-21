@@ -178,8 +178,6 @@ public class Lexer
     
     private void lexCharWhenNotOnAQuote(LexerState state)
     {
-        state.lastCharWasEscape(false);
-        
         if (state.inString())
         {
             this.lexWhenInsideString(state);
@@ -199,6 +197,7 @@ public class Lexer
         else
         {
             state.appendCurCharToWordSoFar();
+            state.lastCharWasEscape(false);
         }
     }
     
