@@ -70,14 +70,14 @@ public class LexerState
      */
     @Getter
     @Setter
-    private boolean inString;
+    private boolean isInString;
     
     /**
      * Whether or not the last character was an escape sequence for a string.
      */
     @Getter
     @Setter
-    private boolean lastCharWasEscape;
+    private boolean wasLastCharEscape;
     
     /**
      * Whether we are on the first char of a potentially multi-char token, and
@@ -85,7 +85,7 @@ public class LexerState
      */
     @Getter
     @Setter
-    private boolean checkNextToken;
+    private boolean doCheckNextToken;
     
     /**
      * The current text of the token we've parsed so far.
@@ -98,7 +98,7 @@ public class LexerState
     {
         this.lexedTokens = new ArrayList<>();
         this.lineNum = 1;
-        this.checkNextToken = false;
+        this.doCheckNextToken = false;
         this.resetWordSoFar();
     }
     
@@ -189,18 +189,27 @@ public class LexerState
      * It's not a requirement to call this method specifically, this is only
      *  a utility method. You can call the setters of the individual booleans
      *  if you need to.
+     * @param inString - true if the lexer is currently inside of a string
+     *  literal.
+     * @param doCheckNextToken - true if, during lexing, we should check the
+     *  following token after this one. This is in-cas we have a multi-glyph
+     *  lexeme.
+     * @param wasLastCharEscape - true if the last char was the "escape" char
+     *  for a string (i.e., the equivalent of "\" in Java).
+     * @param doResetWordSoFar - true if this function should reset the state's
+     *  "wordSoFar".
      */
     public void prepareForNextToken(
         boolean inString,
-        boolean checkNextToken,
-        boolean lastCharWasEscape,
-        boolean resetWordSoFar)
+        boolean doCheckNextToken,
+        boolean wasLastCharEscape,
+        boolean doResetWordSoFar)
     {
-        this.inString(inString);
-        this.checkNextToken(checkNextToken);
-        this.lastCharWasEscape(lastCharWasEscape);
+        this.isInString(inString);
+        this.doCheckNextToken(doCheckNextToken);
+        this.wasLastCharEscape(wasLastCharEscape);
         
-        if (resetWordSoFar)
+        if (doResetWordSoFar)
         {
             this.resetWordSoFar();
         }

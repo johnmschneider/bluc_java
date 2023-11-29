@@ -154,7 +154,7 @@ public class Lexer
     
     private void lexCharWhenOnAQuote(LexerState state)
     {
-        if (!state.inString())
+        if (!state.isInString())
         {
             state.appendCurCharToWordSoFar();
             state.prepareForNextToken(
@@ -163,7 +163,7 @@ public class Lexer
                 false,
                 false);
         }
-        else if (!state.lastCharWasEscape())
+        else if (!state.wasLastCharEscape())
         {
             state.appendCurCharToWordSoFar();
             state.appendTokenIfNotWhitespace();
@@ -178,7 +178,7 @@ public class Lexer
     
     private void lexCharWhenNotOnAQuote(LexerState state)
     {
-        if (state.inString())
+        if (state.isInString())
         {
             this.lexWhenInsideString(state);
         }
@@ -192,12 +192,12 @@ public class Lexer
     {
         if (state.curChar() == '\\')
         {
-            state.lastCharWasEscape(true);
+            state.wasLastCharEscape(true);
         }
         else
         {
             state.appendCurCharToWordSoFar();
-            state.lastCharWasEscape(false);
+            state.wasLastCharEscape(false);
         }
     }
     
@@ -208,7 +208,7 @@ public class Lexer
             state.appendTokenIfNotWhitespace();
             
             state.resetWordSoFar();
-            state.checkNextToken(false);
+            state.doCheckNextToken(false);
         }
         else if (state.curCharMatchesAny(
                     new char[]{'(', ')', '{', '}', '[', ']'}))
@@ -219,26 +219,26 @@ public class Lexer
             state.appendTokenIfNotWhitespace();
             
             state.resetWordSoFar();
-            state.checkNextToken(false);
+            state.doCheckNextToken(false);
         }
         else if (state.curCharMatchesAny(
                     new char[]{'+', '-', '*', '/', '%', '=', '!',
                         '<', '>', '|', '&', '^'}))
         {
-            if (state.checkNextToken())
+            if (state.doCheckNextToken())
             {
                 state.appendCurCharToWordSoFar();
                 state.appendTokenIfNotWhitespace();
                 
                 state.resetWordSoFar();
-                state.checkNextToken(false);
+                state.doCheckNextToken(false);
             }
             else
             {
                 state.appendTokenIfNotWhitespace();
                 
                 state.setWordSoFarToCurChar();
-                state.checkNextToken(true);
+                state.doCheckNextToken(true);
             }
         }
         else
