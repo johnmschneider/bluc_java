@@ -716,25 +716,76 @@ public class ParserTest
     }
 
     /**
-     * Test of nextToken method, of class Parser.
+     * Test of nextToken() method, of class Parser.
      */
     @Test
-    public void testNextToken()
+    public void testNextToken_noArgs()
     {
-        System.out.println("nextToken");
-        Parser instance = null;
-        Result<Parser.NextTokenErrCode> expResult = null;
-        Result<Parser.NextTokenErrCode> result = instance.nextToken();
+        System.out.println("nextToken()");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var expResult
+                = new Token(testFileName, 1, 17, "huel");
+        
+        var testTokens
+                = builder
+                .addTokens("I am hungry, but")
+                .addToken(expResult)
+                .addTokens("helps")
+                .build();
+        
+        var indexBeforeToken = 4;
+        var instance = new Parser(testTokens);
+        
+        instance.setCurrentToken(indexBeforeToken);
+        
+        instance.nextToken();
+        
+        var result = instance.currentToken();
+        
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
-
+    
+    /**
+     * Test of nextToken(int) method, of class Parser.
+     */
+    @Test
+    public void testNextToken_intArg()
+    {
+        System.out.println("nextToken(int tokensToAdvance)");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var expResult
+                = new Token(testFileName, 1, 18, "pizza");
+        
+        var testTokens
+                = builder
+                .addTokens("I would like some")
+                .addToken(expResult)
+                .addTokens("tbh")
+                .build();
+        
+        var tokensToAdvance = 4;
+        var instance = new Parser(testTokens);
+        
+        instance.nextToken(tokensToAdvance);
+        
+        var result = instance.currentToken();
+        
+        assertEquals(expResult, result);
+    }
+    
     /**
      * Test of advanceParser method, of class Parser.
      */
     @Test
-    public void testAdvanceParser()
+    public void testAdvanceParser_validIndexReturnsSuccessCode()
     {
         System.out.println("advanceParser");
         Parser instance = null;
@@ -744,7 +795,22 @@ public class ParserTest
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }
-
+    
+    /**
+     * Test of advanceParser method, of class Parser.
+     */
+    @Test
+    public void testAdvanceParser_validIndexAdvancesParser()
+    {
+        System.out.println("advanceParser");
+        Parser instance = null;
+        Result<Parser.AdvanceParserErrCode> expResult = null;
+        Result<Parser.AdvanceParserErrCode> result = instance.advanceParser();
+        assertEquals(expResult, result);
+        // TODO review the generated test code and remove the default call to fail.
+        fail("The test case is a prototype.");
+    }
+    
     /**
      * Test of atEOF method, of class Parser.
      */

@@ -211,7 +211,7 @@ public class Lexer
             state.doCheckNextToken(false);
         }
         else if (state.curCharMatchesAny(
-                    new char[]{'(', ')', '{', '}', '[', ']'}))
+                    new char[]{'(', ')', '{', '}', '[', ']', ','}))
         {
             state.appendTokenIfNotWhitespace();
             

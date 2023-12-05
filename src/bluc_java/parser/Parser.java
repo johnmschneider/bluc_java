@@ -283,7 +283,7 @@ public class Parser
             = new Result<NextTokenErrCode>();
         
         for (int i = 0; i < tokensToAdvance; i++)
-        {    
+        {
             var advanceResult
                 = this.advanceParser();
 
