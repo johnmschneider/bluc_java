@@ -787,13 +787,27 @@ public class ParserTest
     @Test
     public void testAdvanceParser_validIndexReturnsSuccessCode()
     {
-        System.out.println("advanceParser");
-        Parser instance = null;
-        Result<Parser.AdvanceParserErrCode> expResult = null;
-        Result<Parser.AdvanceParserErrCode> result = instance.advanceParser();
+        System.out.println("advanceParser - returns success code");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("Buffalo chicken dip sounds good right now")
+                .build();
+        
+        Parser instance
+                = new Parser(testTokens);
+        var expResult
+                = true;
+        var result
+                = instance
+                .advanceParser()
+                .hasSucceeded();
+        
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
     
     /**
@@ -802,8 +816,51 @@ public class ParserTest
     @Test
     public void testAdvanceParser_validIndexAdvancesParser()
     {
-        System.out.println("advanceParser");
-        Parser instance = null;
+        System.out.println("advanceParser - actually advances parser");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var expResult
+                = new Token(testFileName, 1, 1, "Jalepeno");
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens(expResult + " poppers sound good right now")
+                .build();
+        
+        Parser instance
+                = new Parser(testTokens);
+        
+        instance.advanceParser();
+        
+        var result
+                = instance.currentToken();
+        
+        assertEquals(expResult, result);
+    }
+    
+    /**
+     * Test of advanceParser method, of class Parser.
+     */
+    @Test
+    public void testAdvanceParser_invalidIndexReturnsErrorCode()
+    {
+        System.out.println(
+            "advanceParser - error code is returned when at EOF");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("Jalepeno poppers sound good right now")
+                .build();
+        
+        Parser instance
+                = new Parser(testTokens);
+        
         Result<Parser.AdvanceParserErrCode> expResult = null;
         Result<Parser.AdvanceParserErrCode> result = instance.advanceParser();
         assertEquals(expResult, result);
