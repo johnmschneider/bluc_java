@@ -101,8 +101,11 @@ public class Parser
     /**
      * Returns the token at curTokenIndex + offset.
      * 
-     * It's valid for offset to be negative to get previous
+     * It's valid for the offset to be negative to get previous
      *  tokens.
+     * 
+     * If the token specified is before the first token or after the last token,
+     *  then a SOF or EOF token is returned, respectively.
      * 
      * @return The token, BLUC_SOF if curTokenIndex + offset is less than
      *  0, or BLUC_EOF if curTokenIndex + offset is greater than or equal
@@ -313,8 +316,8 @@ public class Parser
         
         var newTokenIndex = this.currentTokenIndex + 1;
         
-        
-        if (newTokenIndex >= this.lexedTokens.size())
+        var eofTokenIndex = this.lexedTokens.size() - 1;
+        if (newTokenIndex >= eofTokenIndex)
         {
             result.error(this.currentToken(),
                         AdvanceParserErrCode.AT_EOF);
@@ -328,12 +331,24 @@ public class Parser
     }
     
     /**
-     * Returns "true" if the current token is the end of file token,
+     * Returns "true" if the next token is the end of file token,
      * "false" otherwise.
      */
     public boolean atEOF()
     {
-        return this.currentToken() == Token.BLUC_EOF;
+        return this.atEOF(1);
+    }
+
+    /**
+     * Checks if the token at the specified offset from the current token is
+     *  the end of file token.
+     * 
+     * @return Returns "true" if the token is the end of file token,
+     *  "false" otherwise.
+     */    
+    public boolean atEOF(int offset)
+    {
+        return this.peek(offset) == Token.BLUC_EOF;
     }
     
     /**
@@ -419,7 +434,6 @@ public class Parser
             return result;
         }
         
-        
         // Advance off the "start of file" token
         this.nextToken();
         
@@ -443,6 +457,10 @@ public class Parser
                         stmtResult.errCode().formattedMessage());
                 
                 System.err.println(fatalMessage);
+                
+                result.error(
+                    this.currentToken(), 
+                    ParseResultErrCode.FATAL_UNKNOWN_ERROR);
             }
             
             this.nextToken();
@@ -465,10 +483,10 @@ public class Parser
      * Class for restoring the result of the parser function. Shorthand for
      *  ResultType<ParseResultErrCode, ArrayList<Stmt>>.
      */
-    public class ParseResult
+    public static class ParseResult
             extends ResultType<ParseResultErrCode, ArrayList<Stmt>>
     {
-        
+
     }
     
     public enum ParseResultErrCode
@@ -480,7 +498,13 @@ public class Parser
          * Parser objects are single-use so that we don't have to deep copy the
          *   AST.
          */
-        PARSER_ALREADY_RAN
+        PARSER_ALREADY_RAN,
+        
+        /**
+         * Indicates a fatal compiler error that occurred as a result of an
+         *  unknown ResultType failure code.
+         */
+        FATAL_UNKNOWN_ERROR,
     }
     
     public enum NextTokenErrCode
@@ -516,6 +540,7 @@ public class Parser
             {
                 case AT_EOF:
                     castedError =  NextTokenErrCode.AT_EOF;
+                    break;
                     
                 default:
                     // This should never happen, so embed the function name in
@@ -528,6 +553,8 @@ public class Parser
                     
                     castedError = NextTokenErrCode.FATAL_UNKNOWN_ERROR;
                     castedError.errorMessage(errorMessage);
+                    
+                    break;
             }
             
             return castedError;

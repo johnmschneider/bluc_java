@@ -20,8 +20,11 @@ package bluc_java.parser;
 
 import bluc_java.Result;
 import bluc_java.Token;
+import bluc_java.parser.Parser.AdvanceParserErrCode;
+import bluc_java.parser.Parser.NextTokenErrCode;
+import bluc_java.parser.Parser.ParseResult;
+import bluc_java.parser.Parser.ParseResultErrCode;
 import java.util.ArrayList;
-import java.util.Arrays;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -826,7 +829,8 @@ public class ParserTest
                 = new LexedTokenBuilder(testFileName);
         var testTokens
                 = builder
-                .addTokens(expResult + " poppers sound good right now")
+                .addToken(expResult)
+                .addTokens("poppers sound good right now")
                 .build();
         
         Parser instance
@@ -855,64 +859,310 @@ public class ParserTest
                 = new LexedTokenBuilder(testFileName);
         var testTokens
                 = builder
-                .addTokens("Jalepeno poppers sound good right now")
+                .addTokens("Food sounds good right now")
                 .build();
         
         Parser instance
                 = new Parser(testTokens);
         
-        Result<Parser.AdvanceParserErrCode> expResult = null;
-        Result<Parser.AdvanceParserErrCode> result = instance.advanceParser();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        var lastTokenIndex
+                = 4;
+        
+        // add 1 to account for the "EOF" token
+        instance.setCurrentToken(lastTokenIndex + 1);
+        
+        var expResult
+                = AdvanceParserErrCode.AT_EOF;
+        var result
+                = instance.advanceParser();
+        
+        assertEquals(expResult, result.errCode());
     }
     
     /**
      * Test of atEOF method, of class Parser.
      */
     @Test
-    public void testAtEOF()
+    public void testAtEOF_atEofReturnsTrue()
     {
         System.out.println("atEOF");
-        Parser instance = null;
-        boolean expResult = false;
-        boolean result = instance.atEOF();
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("testing atEOF function")
+                .build();
+        
+        Parser instance
+                = new Parser(testTokens);
+        
+        var lastTokenIndex
+                = 2;
+        instance.setCurrentToken(lastTokenIndex);
+        
+        var expResult
+                = true;
+        var result
+                = instance.atEOF();
+        
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
 
+    /**
+     * Test of atEOF method, of class Parser.
+     */
+    @Test
+    public void testAtEOF_notAtEofReturnsFalse()
+    {
+        System.out.println("atEOF");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("testing atEOF function")
+                .build();
+        
+        var instance
+                = new Parser(testTokens);
+
+        instance.nextToken();
+        
+        var expResult
+                = false;
+        var result
+                = instance.atEOF();
+        
+        assertEquals(expResult, result);
+    }
+    
+    /**
+     * Test of atEOF method, of class Parser.
+     */
+    @Test
+    public void testAtEOF_offsetEofReturnsTrue()
+    {
+        System.out.println("atEOF");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("testing atEOF function\n" +
+                           "with a multi-line test file")
+                .build();
+        
+        var instance
+                = new Parser(testTokens);
+        
+        // Not a mistake -- this isn't supposed to advance all the way
+        //  to the EOF token.
+        instance.nextToken(2);
+        
+        var expResult
+                = true;
+        var result
+                = instance.atEOF(7);
+        
+        assertEquals(expResult, result);
+    }
+    
     /**
      * Test of atEndOfLine method, of class Parser.
      */
     @Test
-    public void testAtEndOfLine()
+    public void testAtEndOfLine_notAtEolReturnsFalse()
     {
         System.out.println("atEndOfLine");
-        Parser instance = null;
-        boolean expResult = false;
-        boolean result = instance.atEndOfLine();
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("testing atEOL function on a\n" +
+                           "multi-line token array which\n" +
+                           "spans several lines")
+                .build();
+        
+        var instance
+                = new Parser(testTokens);
+        var expResult
+                = false;
+        
+        instance.nextToken(2);
+        
+        var result
+                = instance.atEndOfLine();
+        
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
-
+    
+    /**
+     * Test of atEndOfLine method, of class Parser.
+     */
+    @Test
+    public void testAtEndOfLine_atEolReturnsTrue()
+    {
+        System.out.println("atEndOfLine");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("testing atEOL function on a\n" +
+                           "multi-line token array which\n" +
+                           "spans several lines")
+                .build();
+        
+        var instance
+                = new Parser(testTokens);
+        var expResult
+                = true;
+        
+        instance.nextToken(4);
+        
+        var result
+                = instance.atEndOfLine();
+        
+        assertEquals(expResult, result);
+    }
+    
+    /**
+     * Test of atEndOfLine method, of class Parser.
+     */
+    @Test
+    public void testAtEndOfLine_atEofReturnsTrue()
+    {
+        System.out.println("atEndOfLine");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("testing atEOL function on a\n" +
+                           "multi-line token array which\n" +
+                           "is spanning several lines")
+                .build();
+        
+        var instance
+                = new Parser(testTokens);
+        var expResult
+                = true;
+        
+        instance.nextToken(14);
+        
+        var result
+                = instance.atEndOfLine();
+        
+        assertEquals(expResult, result);
+    }
+    
     /**
      * Test of atStartOfLine method, of class Parser.
      */
     @Test
-    public void testAtStartOfLine()
+    public void testAtStartOfLine_sofReturnsTrue()
     {
         System.out.println("atStartOfLine");
-        Parser instance = null;
-        boolean expResult = false;
-        boolean result = instance.atStartOfLine();
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("testing atEOL function on a\n" +
+                           "multi-line token array which\n" +
+                           "spans several lines")
+                .build();
+        
+        var instance
+                = new Parser(testTokens);
+        var expResult
+                = true;
+        var result
+                = instance.atStartOfLine();
+        
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
-
+    
+    /**
+     * Test of atStartOfLine method, of class Parser.
+     */
+    @Test
+    public void testAtStartOfLine_notAtSolReturnsFalse()
+    {
+        System.out.println("atStartOfLine");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("testing atEOL function on a\n" +
+                           "multi-line token array which\n" +
+                           "spans several lines")
+                .build();
+        
+        var instance
+                = new Parser(testTokens);
+        var expResult
+                = false;
+        
+        instance.nextToken(2);
+        
+        var result
+                = instance.atStartOfLine();
+        
+        assertEquals(expResult, result);
+    }
+    
+    /**
+     * Test of atStartOfLine method, of class Parser.
+     */
+    @Test
+    public void testAtStartOfLine_atSolReturnsTrue()
+    {
+        System.out.println("atStartOfLine");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("testing atEOL function on a\n" +
+                           "multi-line token array which\n" +
+                           "spans several lines")
+                .build();
+        
+        var instance
+                = new Parser(testTokens);
+        var expResult
+                = true;
+        
+        instance.nextToken(5);
+        
+        var result
+                = instance.atStartOfLine();
+        
+        assertEquals(expResult, result);
+    }
+    
     /**
      * Test of castToNextTokenError method, of class Parser.
      */
@@ -920,12 +1170,19 @@ public class ParserTest
     public void testCastToNextTokenError()
     {
         System.out.println("castToNextTokenError");
-        Result<Parser.AdvanceParserErrCode> advanceResult = null;
-        Result<Parser.NextTokenErrCode> expResult = null;
-        Result<Parser.NextTokenErrCode> result = Parser.castToNextTokenError(advanceResult);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        
+        var advanceResult
+                = new Result<AdvanceParserErrCode>();
+        var expResult
+                = new Result<NextTokenErrCode>();
+        
+        advanceResult.errCode(AdvanceParserErrCode.AT_EOF);
+        expResult.errCode(NextTokenErrCode.AT_EOF);
+        
+        var result
+                = Parser.castToNextTokenError(advanceResult);
+        
+        assertEquals(expResult.errCode(), result.errCode());
     }
 
     /**
@@ -935,43 +1192,29 @@ public class ParserTest
     public void testParse()
     {
         System.out.println("parse");
-        Parser instance = null;
-        Parser.ParseResult expResult = null;
-        Parser.ParseResult result = instance.parse();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of lexedTokens method, of class Parser.
-     */
-    @Test
-    public void testLexedTokens_0args()
-    {
-        System.out.println("lexedTokens");
-        Parser instance = null;
-        ArrayList<Token> expResult = null;
-        ArrayList<Token> result = instance.lexedTokens();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
-     * Test of lexedTokens method, of class Parser.
-     */
-    @Test
-    public void testLexedTokens_ArrayList()
-    {
-        System.out.println("lexedTokens");
-        ArrayList<Token> lexedTokens = null;
-        Parser instance = null;
-        Parser expResult = null;
-        Parser result = instance.lexedTokens(lexedTokens);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("I am no longer hungry after eating lunch")
+                .build();
+        
+        Parser instance
+                = new Parser(testTokens);
+        
+        /*
+         * Currently, we expect the parser to fail, as no sub-parsers are
+         * implemented yet This will change in the near future.
+         */
+        var expResult
+                = ParseResultErrCode.FATAL_UNKNOWN_ERROR;
+        var result
+                = instance.parse();
+        
+        assertEquals(expResult, result.errCode());
     }
 
     /**
@@ -1018,5 +1261,4 @@ public class ParserTest
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
     }
-    
 }
