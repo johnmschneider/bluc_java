@@ -22,9 +22,7 @@ import bluc_java.Result;
 import bluc_java.Token;
 import bluc_java.parser.Parser.AdvanceParserErrCode;
 import bluc_java.parser.Parser.NextTokenErrCode;
-import bluc_java.parser.Parser.ParseResult;
 import bluc_java.parser.Parser.ParseResultErrCode;
-import java.util.ArrayList;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -1224,12 +1222,24 @@ public class ParserTest
     public void testCurrentTokenIndex()
     {
         System.out.println("currentTokenIndex");
-        Parser instance = null;
-        int expResult = 0;
-        int result = instance.currentTokenIndex();
+
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var testTokens
+                = builder
+                .addTokens("I am still no longer hungry after eating lunch")
+                .build();
+
+        var instance = new Parser(testTokens);
+        var expResult = 2;
+
+        instance.nextToken(2);
+
+        var result = instance.currentTokenIndex();
+        
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
 
     /**
@@ -1239,26 +1249,26 @@ public class ParserTest
     public void testCurrentToken()
     {
         System.out.println("currentToken");
-        Parser instance = null;
-        Token expResult = null;
-        Token result = instance.currentToken();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
 
-    /**
-     * Test of isMultilineStmt method, of class Parser.
-     */
-    @Test
-    public void testIsMultilineStmt()
-    {
-        System.out.println("isMultilineStmt");
-        Parser instance = null;
-        boolean expResult = false;
-        boolean result = instance.isMultilineStmt();
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var expResult
+                = new Token(testFileName, 1, 18, "lunch");
+        var testTokens
+                = builder
+                .addTokens("Some")
+                .addToken(expResult)
+                .addTokens("sounds good right now")
+                .build();
+
+        var instance = new Parser(testTokens);
+
+        instance.nextToken(2);
+
+        var result = instance.currentToken();
+
         assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
 }

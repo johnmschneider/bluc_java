@@ -15,7 +15,6 @@
  */
 package bluc_java;
 
-import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
