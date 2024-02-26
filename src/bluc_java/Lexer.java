@@ -21,6 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -114,6 +116,8 @@ public class Lexer
         
         state.appendLexedToken(Token.BLUC_SOF);
         
+        state.lineCount(linesOfFile.size());
+
         for (var line : linesOfFile)
         {
             state.line(line);
@@ -128,11 +132,12 @@ public class Lexer
         return state.lexedTokens();
     }
     
-    private void lexLine(LexerState state)
+    private Result<LexErrCode> lexLine(LexerState state)
     {
-        state.column(1);
-        
+        var result = new Result<LexErrCode>();
         var lineAsArray = state.line().toCharArray();
+
+        state.column(1);
         
         for (int column = 1; column <= lineAsArray.length; column++)
         {
@@ -147,9 +152,11 @@ public class Lexer
             }
             else
             {
-                this.lexCharWhenNotOnAQuote(state);
+                result = this.lexCharWhenNotOnAQuote(state);
             }
         }
+
+        return result;
     }
     
     private void lexCharWhenOnAQuote(LexerState state)
@@ -176,20 +183,26 @@ public class Lexer
         }
     }
     
-    private void lexCharWhenNotOnAQuote(LexerState state)
+    private Result<LexErrCode> lexCharWhenNotOnAQuote(LexerState state)
     {
+        var result = new Result<LexErrCode>();
+
         if (state.isInString())
         {
-            this.lexWhenInsideString(state);
+            result = this.lexWhenInsideString(state);
         }
         else
         {
             this.lexWhenNotInString(state);
         }
+
+        return result;
     }
     
-    private void lexWhenInsideString(LexerState state)
+    private Result<LexErrCode> lexWhenInsideString(LexerState state)
     {
+        var result = new Result<LexErrCode>();
+
         if (state.curChar() == '\\')
         {
             state.wasLastCharEscape(true);
@@ -198,7 +211,18 @@ public class Lexer
         {
             state.appendCurCharToWordSoFar();
             state.wasLastCharEscape(false);
+
+            if (state.isAtEOF())
+            {
+                result.errCode(
+                    new LexErrCode(
+                        LexErrCode.UNEXPECTED_EOF,
+                        state.line(),
+                        state.column()));
+            }
         }
+
+        return result;
     }
     
     private void lexWhenNotInString(LexerState state)
@@ -244,6 +268,64 @@ public class Lexer
         else
         {
             state.appendCurCharToWordSoFar();
+
+            if (state.isAtEOF())
+            {
+                state.appendTokenIfNotWhitespace();
+            }
+        }
+    }
+
+    @AllArgsConstructor
+    public class LexErrCode
+    {
+        public static final int UNEXPECTED_EOF = 0;
+
+        @Getter
+        @Setter
+        private int errorCode;
+
+        @Getter
+        @Setter
+        private String errorLine;
+
+        @Getter
+        @Setter
+        private int errorColumn;
+
+        public String errorMessage()
+        {
+            // I didn't really think these few error types needed to be 
+            //  inherited classes. I'm trying to favor composition over
+            //  inheritance.
+            switch (this.errorCode())
+            {
+                case UNEXPECTED_EOF:
+                    return this.getEofErrorMessage();
+
+                default:
+                    return "Unknown error code.";
+            }
+        }
+
+        private String getEofErrorMessage()
+        {
+            var lookbackCharIndex = Math.max(0, this.errorColumn() - 10);
+
+            var surroundingTokens
+                    = this
+                    .errorLine()
+                    .substring(
+                        lookbackCharIndex,
+                        this.errorColumn());
+
+            return String.format(
+                "[LEXER ERROR, line %s, col %s]: Unexpected EOF while inside a string. Expected string terminator near:\n" +
+                "\t`%s`." +
+                "",
+                this.errorLine(),
+                this.errorColumn(),
+                surroundingTokens);
         }
     }
 }

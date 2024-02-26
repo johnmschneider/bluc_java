@@ -679,7 +679,7 @@ public class ParserTest
                            "two ounces pepperoni")
                 .build();
         
-        var index = 2;
+        var index = 3;
         var instance = new Parser(testTokens);
         
         instance.setCurrentToken(index);
@@ -709,7 +709,7 @@ public class ParserTest
                 .addTokens("helps")
                 .build();
         
-        var index = 5;
+        var index = 6;
         var instance = new Parser(testTokens);
         var result = instance.getTokenAt(index);
         
@@ -738,7 +738,7 @@ public class ParserTest
                 .addTokens("helps")
                 .build();
         
-        var indexBeforeToken = 4;
+        var indexBeforeToken = 5;
         var instance = new Parser(testTokens);
         
         instance.setCurrentToken(indexBeforeToken);
@@ -772,7 +772,7 @@ public class ParserTest
                 .addTokens("tbh")
                 .build();
         
-        var tokensToAdvance = 4;
+        var tokensToAdvance = 5;
         var instance = new Parser(testTokens);
         
         instance.nextToken(tokensToAdvance);
@@ -898,7 +898,7 @@ public class ParserTest
                 = new Parser(testTokens);
         
         var lastTokenIndex
-                = 2;
+                = 3;
         instance.setCurrentToken(lastTokenIndex);
         
         var expResult

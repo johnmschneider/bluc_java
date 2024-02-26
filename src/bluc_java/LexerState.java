@@ -50,7 +50,14 @@ public class LexerState
     @Getter
     @Setter
     private int lineNum;
-    
+
+    /**
+     * The total number of lines of the original input that we're lexing.
+     */
+    @Getter
+    @Setter
+    private int lineCount;
+
     /**
      * The current column that the lexer is on.
      */
@@ -93,7 +100,7 @@ public class LexerState
     @Getter
     @Setter
     private String wordSoFar;
-    
+
     public LexerState()
     {
         this.lexedTokens = new ArrayList<>();
@@ -103,7 +110,31 @@ public class LexerState
     }
     
     /**
-     * Adds a token to <see cref="lexedTokens/>
+     * @return true if the lexer is on the last line of input, false otherwise.
+     */
+    public boolean isOnLastLine()
+    {
+        return this.lineNum() == this.lineCount();
+    }
+
+    /**
+     * @return true if the lexer is on the last character of the current line, false otherwise.
+     */
+    public boolean isOnLastCharOfLine()
+    {
+        return this.column() == this.line().length();
+    }
+
+    /**
+     * @return true if the lexer is at the end of the file, false otherwise.
+     */
+    public boolean isAtEOF()
+    {
+        return this.isOnLastLine() && this.isOnLastCharOfLine();
+    }
+
+    /**
+     * Adds a token to @see LexerState.lexedTokens.
      */
     public void appendLexedToken(Token token)
     {

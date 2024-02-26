@@ -25,19 +25,26 @@ import java.util.Arrays;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.Accessors;
 
 /**
  *  Builder class to create a list of lexed tokens (ArrayList<Token>).
  * @author john
  */
-@Accessors(fluent=true)
 public class LexedTokenBuilder
 {
+    /**
+     * Gets or sets the fake name to use as the tokens' file name, for testing.
+     */
     @Getter
     @Setter
     private String testFileName;
     
+    /**
+     * Gets or sets a list of all the tokens that have been lexed so far.
+     * 
+     * This should NOT include the SOF or EOF tokens, as these are added by
+     *  the "build" function automatically.
+     */
     @Getter(AccessLevel.PRIVATE)
     @Setter(AccessLevel.PRIVATE)
     private ArrayList<Token> lexedTokens;
@@ -52,8 +59,6 @@ public class LexedTokenBuilder
     {
         this.testFileName = testFileName;
         this.lexedTokens = new ArrayList<Token>();
-        
-        this.lexedTokens.add(Token.BLUC_SOF);
     }
     
     /**
@@ -102,7 +107,9 @@ public class LexedTokenBuilder
                 .lexFile(unlexedLines);
         
         // Remove the SOF and EOF tokens, since we already add them in this
-        //  builder automatically.
+        //  builder automatically. This must be done because we may potentially
+        //  be using just the "addToken" function, which doesn't include EOF/SOF
+        //  tokens, so they're added in the build function.
         newLexedTokens = this.removeSofAndEof(newLexedTokens);
         newLexedTokens = this.addOffsetToLineNumbers(newLexedTokens);
         
@@ -133,17 +140,11 @@ public class LexedTokenBuilder
     private ArrayList<Token> addOffsetToLineNumbers(
         ArrayList<Token> newLexedTokens)
     {
-        var lexedTokens = this.lexedTokens();
-        
-        // The last index of a token other than the EOF token.
-        var lastTokenIndex = lexedTokens.size() - 2;
-        
-        if (lastTokenIndex < 0)
-        {
-            lastTokenIndex = 0;
-        }
-                
-        var lineOffset = lexedTokens.get(lastTokenIndex).lineNum();
+        /*
+         * Not a mistake -- we want to get the previous line number of the
+         *  *current* lexedTokens list, not the newLexedTokens list.
+         */
+        var lineOffset = this.findPreviousLineNumber(this.lexedTokens());
         
         for (var token : newLexedTokens)
         {
@@ -153,6 +154,31 @@ public class LexedTokenBuilder
         }
         
         return newLexedTokens;
+    }
+    
+    /**
+     * Finds the line number of the previous token in the specified list of
+     *  tokens.
+     * 
+     * @return the line number of the previous token, or 0 if there are no
+     *  tokens in the array.
+     */
+    private int findPreviousLineNumber(ArrayList<Token> tokens)
+    {
+        if (tokens.isEmpty())
+        {
+            return 0;
+        }
+        
+        // The last index of a token other than the EOF token.
+        var lastTokenIndex = tokens.size() - 2;
+        
+        if (lastTokenIndex < 0)
+        {
+            lastTokenIndex = 0;
+        }
+        
+        return tokens.get(lastTokenIndex).lineNum();
     }
     
     /**
@@ -167,12 +193,8 @@ public class LexedTokenBuilder
         
         deepCopiedList.add(Token.BLUC_SOF);
         
-        // Start at 1 to skip the "start of file" token. we don't want to deep
-        //  copy SOF or EOF tokens because then they won't technically be the
-        //  same instance as the fields declared in Token.
-        for (int i = 1; i < lexedTokens.size(); i++)
+        for (var token : lexedTokens)
         {
-            var token = lexedTokens.get(i);;
             deepCopiedList.add(token.deepCopy());
         }
         
@@ -187,6 +209,5 @@ public class LexedTokenBuilder
     public void clearBuffer()
     {
         this.lexedTokens().clear();
-        this.lexedTokens().add(Token.BLUC_SOF);
     }
 }
