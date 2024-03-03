@@ -102,9 +102,12 @@ public class LexedTokenBuilder
     {
         var unlexedLines
                 = Arrays.asList(tokensToAdd.split("\n"));
+        
+        // Assume that the lexer won't fail, since we're just testing.
         var newLexedTokens
                 = new Lexer()
-                .lexFile(unlexedLines);
+                .lexFile(unlexedLines)
+                .data(); 
         
         // Remove the SOF and EOF tokens, since we already add them in this
         //  builder automatically. This must be done because we may potentially

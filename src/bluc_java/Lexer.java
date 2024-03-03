@@ -41,37 +41,6 @@ public class Lexer
     }
     
     /**
-     * Reads the file at the specified file path, then lexes the file.
-     * 
-     * @param filePath - the file to read and lex
-     */
-    public ArrayList<Token> lexFile(String filePath)
-    {
-        var lexedTokens = new ArrayList<Token>();
-        var absoluteFilePath = new File(filePath).getAbsolutePath();
-        
-        this.state().filePath(absoluteFilePath);
-        
-        try
-        {
-            var allLinesOfFile
-                = Files.readAllLines(Paths.get(absoluteFilePath));
-            
-            allLinesOfFile
-                = this.addNewlinesBackToFileContents(allLinesOfFile);
-            lexedTokens
-                = this.lexFile(allLinesOfFile, this.state());
-        } 
-        catch (IOException ex)
-        {
-            ex.printStackTrace();
-            System.exit(1);
-        }
-        
-        return lexedTokens;
-    }
-    
-    /**
      * Adds newlines back to the contents of the file. This simplifies the
      *  lexing of the file, so that we can just split on white space.
      * 
@@ -93,6 +62,53 @@ public class Lexer
     }
     
     /**
+     * Reads the file at the specified file path, then lexes the file.
+     * 
+     * @param filePath - the file to read and lex
+     */
+    public ResultType<LexErrCode, ArrayList<Token>> lexFile(String filePath)
+    {
+        var result = new ResultType<LexErrCode, ArrayList<Token>>();
+        var lexedTokens = new ArrayList<Token>();
+        var absoluteFilePath = new File(filePath).getAbsolutePath();
+        
+        this.state().filePath(absoluteFilePath);
+        
+        try
+        {
+            var allLinesOfFile
+                    = Files.readAllLines(Paths.get(absoluteFilePath));
+            
+            allLinesOfFile
+                    = this.addNewlinesBackToFileContents(allLinesOfFile);
+
+            var lexResult
+                    = this.lexFile(allLinesOfFile, this.state());
+
+            if (lexResult.hasFailed())
+            {
+                System.out.println(lexResult.errCode().errorMessage());
+                
+                result.errCode(lexResult.errCode());
+
+                return result;
+            }
+
+            lexedTokens
+                    = lexResult.data();
+        } 
+        catch (IOException ex)
+        {
+            ex.printStackTrace();
+            System.exit(1);
+        }
+        
+        result.data(lexedTokens);
+
+        return result;
+    }
+    
+    /**
      * Returns the lexed tokens given the specified file contents.<br/><br/>
      * 
      * <b>Remarks:</b><br/>&#9;
@@ -102,15 +118,16 @@ public class Lexer
      * @param allLinesOfFile - the file contents to lex. Each new index
      *  represents a new line in the file.
      */
-    public ArrayList<Token> lexFile(List<String> allLinesOfFile)
+    public ResultType<LexErrCode, ArrayList<Token>> lexFile(List<String> allLinesOfFile)
     {
         return this.lexFile(allLinesOfFile, this.state());
     }
     
-    private ArrayList<Token> lexFile(
+    private ResultType<LexErrCode, ArrayList<Token>> lexFile(
         List<String> allLinesOfFile,
         LexerState state)
     {
+        var result = new ResultType<LexErrCode, ArrayList<Token>>();
         var commentsRemover = new CommentsRemover();
         var linesOfFile = commentsRemover.run(allLinesOfFile);
         
@@ -122,14 +139,27 @@ public class Lexer
         {
             state.line(line);
             
-            this.lexLine(this.state());
+            var lexLineResult = this.lexLine(this.state());
             
+            if (lexLineResult.hasFailed())
+            {
+                var errCode = result.errCode();
+                System.out.println(errCode.errorMessage());
+                
+                result.errCode(errCode);
+
+                // A lexer error is a critical error, we can't continue lexing.
+                return result;
+            }
+
             state.incrementLineNum();
         }
         
         state.appendLexedToken(Token.BLUC_EOF);
         
-        return state.lexedTokens();
+        result.data(state.lexedTokens());
+
+        return result;
     }
     
     private Result<LexErrCode> lexLine(LexerState state)
