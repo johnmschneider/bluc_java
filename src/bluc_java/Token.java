@@ -16,6 +16,7 @@
 package bluc_java;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,9 +26,9 @@ import lombok.Setter;
  */
 @NoArgsConstructor
 @AllArgsConstructor
-public class Token
+@EqualsAndHashCode
+public class Token implements IDeepCopyable<Token>
 {
-
     public static final Token BLUC_SOF =
         new Token(null, -1, -1, "__BLUC_SOF__");
     
@@ -77,5 +78,29 @@ public class Token
     public boolean matches(String textToMatch)
     {
         return this.matchesAny(new String[]{textToMatch});
+    }
+    
+    /**
+     * Create a deep copy of this token.
+     * 
+     * @return a deep copy of this token.
+     */
+    @Override
+    public Token deepCopy()
+    {
+        // Strings are immutable, and ints are plain-old-data, so there's no
+        //  need to do further work to "deep copy" anything in the "Token" class
+        //  right now.
+        var deepCopy
+            = new Token(
+                this.filePath(), this.lineNum(), this.columnNum(), this.text());
+        
+        return deepCopy;
+    }
+    
+    @Override
+    public String toString()
+    {
+        return "Token { `" + this.text() + "` }";
     }
 }

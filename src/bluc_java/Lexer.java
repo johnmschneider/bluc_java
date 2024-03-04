@@ -21,6 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -36,30 +38,6 @@ public class Lexer
     public Lexer()
     {
         this.state = new LexerState();
-    }
-    
-    public ArrayList<Token> lexFile(String filePath)
-    {
-        var lexedTokens = new ArrayList<Token>();
-        var absoluteFilePath = new File(filePath).getAbsolutePath();
-        
-        this.state.filePath(absoluteFilePath);
-        
-        try
-        {
-            var allLinesOfFile = 
-                    Files.readAllLines(Paths.get(absoluteFilePath));
-            
-            allLinesOfFile = this.addNewlinesBackToFileContents(allLinesOfFile);
-            lexedTokens = this.lex(allLinesOfFile, this.state);
-        } 
-        catch (IOException ex)
-        {
-            ex.printStackTrace();
-            System.exit(1);
-        }
-        
-        return lexedTokens;
     }
     
     /**
@@ -83,36 +61,113 @@ public class Lexer
         return contentsWithNewline;
     }
     
-    private ArrayList<Token> lex(
+    /**
+     * Reads the file at the specified file path, then lexes the file.
+     * 
+     * @param filePath - the file to read and lex
+     */
+    public ResultType<LexErrCode, ArrayList<Token>> lexFile(String filePath)
+    {
+        var result = new ResultType<LexErrCode, ArrayList<Token>>();
+        var lexedTokens = new ArrayList<Token>();
+        var absoluteFilePath = new File(filePath).getAbsolutePath();
+        
+        this.state().filePath(absoluteFilePath);
+        
+        try
+        {
+            var allLinesOfFile
+                    = Files.readAllLines(Paths.get(absoluteFilePath));
+            
+            allLinesOfFile
+                    = this.addNewlinesBackToFileContents(allLinesOfFile);
+
+            var lexResult
+                    = this.lexFile(allLinesOfFile, this.state());
+
+            if (lexResult.hasFailed())
+            {
+                System.out.println(lexResult.errCode().errorMessage());
+                
+                result.errCode(lexResult.errCode());
+
+                return result;
+            }
+
+            lexedTokens
+                    = lexResult.data();
+        } 
+        catch (IOException ex)
+        {
+            ex.printStackTrace();
+            System.exit(1);
+        }
+        
+        result.data(lexedTokens);
+
+        return result;
+    }
+    
+    /**
+     * Returns the lexed tokens given the specified file contents.<br/><br/>
+     * 
+     * <b>Remarks:</b><br/>&#9;
+     *      This is method is currently only intended for use in
+     *  unit testing.
+     * 
+     * @param allLinesOfFile - the file contents to lex. Each new index
+     *  represents a new line in the file.
+     */
+    public ResultType<LexErrCode, ArrayList<Token>> lexFile(List<String> allLinesOfFile)
+    {
+        return this.lexFile(allLinesOfFile, this.state());
+    }
+    
+    private ResultType<LexErrCode, ArrayList<Token>> lexFile(
         List<String> allLinesOfFile,
         LexerState state)
     {
+        var result = new ResultType<LexErrCode, ArrayList<Token>>();
         var commentsRemover = new CommentsRemover();
         var linesOfFile = commentsRemover.run(allLinesOfFile);
         
         state.appendLexedToken(Token.BLUC_SOF);
         
+        state.lineCount(linesOfFile.size());
+
         for (var line : linesOfFile)
         {
             state.line(line);
             
-            this.lexLine(this.state);
+            var lexLineResult = this.lexLine(this.state());
             
+            if (lexLineResult.hasFailed())
+            {
+                var errCode = result.errCode();
+                System.out.println(errCode.errorMessage());
+                
+                result.errCode(errCode);
+
+                // A lexer error is a critical error, we can't continue lexing.
+                return result;
+            }
+
             state.incrementLineNum();
         }
         
         state.appendLexedToken(Token.BLUC_EOF);
         
-        return state.lexedTokens();
+        result.data(state.lexedTokens());
+
+        return result;
     }
     
-
-    
-    private void lexLine(LexerState state)
+    private Result<LexErrCode> lexLine(LexerState state)
     {
-        state.column(1);
-        
+        var result = new Result<LexErrCode>();
         var lineAsArray = state.line().toCharArray();
+
+        state.column(1);
         
         for (int column = 1; column <= lineAsArray.length; column++)
         {
@@ -127,14 +182,16 @@ public class Lexer
             }
             else
             {
-                this.lexCharWhenNotOnAQuote(state);
+                result = this.lexCharWhenNotOnAQuote(state);
             }
         }
+
+        return result;
     }
     
     private void lexCharWhenOnAQuote(LexerState state)
     {
-        if (!state.inString())
+        if (!state.isInString())
         {
             state.appendCurCharToWordSoFar();
             state.prepareForNextToken(
@@ -143,7 +200,7 @@ public class Lexer
                 false,
                 false);
         }
-        else if (!state.lastCharWasEscape())
+        else if (!state.wasLastCharEscape())
         {
             state.appendCurCharToWordSoFar();
             state.appendTokenIfNotWhitespace();
@@ -156,30 +213,46 @@ public class Lexer
         }
     }
     
-    private void lexCharWhenNotOnAQuote(LexerState state)
+    private Result<LexErrCode> lexCharWhenNotOnAQuote(LexerState state)
     {
-        state.lastCharWasEscape(false);
-        
-        if (state.inString())
+        var result = new Result<LexErrCode>();
+
+        if (state.isInString())
         {
-            this.lexWhenInsideString(state);
+            result = this.lexWhenInsideString(state);
         }
         else
         {
             this.lexWhenNotInString(state);
         }
+
+        return result;
     }
     
-    private void lexWhenInsideString(LexerState state)
+    private Result<LexErrCode> lexWhenInsideString(LexerState state)
     {
+        var result = new Result<LexErrCode>();
+
         if (state.curChar() == '\\')
         {
-            state.lastCharWasEscape(true);
+            state.wasLastCharEscape(true);
         }
         else
         {
             state.appendCurCharToWordSoFar();
+            state.wasLastCharEscape(false);
+
+            if (state.isAtEOF())
+            {
+                result.errCode(
+                    new LexErrCode(
+                        LexErrCode.UNEXPECTED_EOF,
+                        state.line(),
+                        state.column()));
+            }
         }
+
+        return result;
     }
     
     private void lexWhenNotInString(LexerState state)
@@ -189,10 +262,10 @@ public class Lexer
             state.appendTokenIfNotWhitespace();
             
             state.resetWordSoFar();
-            state.checkNextToken(false);
+            state.doCheckNextToken(false);
         }
         else if (state.curCharMatchesAny(
-                    new char[]{'(', ')', '{', '}', '[', ']'}))
+                    new char[]{'(', ')', '{', '}', '[', ']', ','}))
         {
             state.appendTokenIfNotWhitespace();
             
@@ -200,31 +273,89 @@ public class Lexer
             state.appendTokenIfNotWhitespace();
             
             state.resetWordSoFar();
-            state.checkNextToken(false);
+            state.doCheckNextToken(false);
         }
         else if (state.curCharMatchesAny(
                     new char[]{'+', '-', '*', '/', '%', '=', '!',
                         '<', '>', '|', '&', '^'}))
         {
-            if (state.checkNextToken())
+            if (state.doCheckNextToken())
             {
                 state.appendCurCharToWordSoFar();
                 state.appendTokenIfNotWhitespace();
                 
                 state.resetWordSoFar();
-                state.checkNextToken(false);
+                state.doCheckNextToken(false);
             }
             else
             {
                 state.appendTokenIfNotWhitespace();
                 
                 state.setWordSoFarToCurChar();
-                state.checkNextToken(true);
+                state.doCheckNextToken(true);
             }
         }
         else
         {
             state.appendCurCharToWordSoFar();
+
+            if (state.isAtEOF())
+            {
+                state.appendTokenIfNotWhitespace();
+            }
+        }
+    }
+
+    @AllArgsConstructor
+    public class LexErrCode
+    {
+        public static final int UNEXPECTED_EOF = 0;
+
+        @Getter
+        @Setter
+        private int errorCode;
+
+        @Getter
+        @Setter
+        private String errorLine;
+
+        @Getter
+        @Setter
+        private int errorColumn;
+
+        public String errorMessage()
+        {
+            // I didn't really think these few error types needed to be 
+            //  inherited classes. I'm trying to favor composition over
+            //  inheritance.
+            switch (this.errorCode())
+            {
+                case UNEXPECTED_EOF:
+                    return this.getEofErrorMessage();
+
+                default:
+                    return "Unknown error code.";
+            }
+        }
+
+        private String getEofErrorMessage()
+        {
+            var lookbackCharIndex = Math.max(0, this.errorColumn() - 10);
+
+            var surroundingTokens
+                    = this
+                    .errorLine()
+                    .substring(
+                        lookbackCharIndex,
+                        this.errorColumn());
+
+            return String.format(
+                "[LEXER ERROR, line %s, col %s]: Unexpected EOF while inside a string. Expected string terminator near:\n" +
+                "\t`%s`." +
+                "",
+                this.errorLine(),
+                this.errorColumn(),
+                surroundingTokens);
         }
     }
 }

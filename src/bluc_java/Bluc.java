@@ -40,7 +40,14 @@ public class Bluc
         var filePath = args[0].substring(equalsIndex + 1);
         var lexer = new Lexer();
         
-        var tokens = lexer.lexFile(filePath);
+        var lexResult = lexer.lexFile(filePath);
+        
+        if (lexResult.hasFailed())
+        {
+            return;
+        }
+        
+        var tokens = lexResult.data();
         
         Bluc.printLexerOutput(tokens);
         

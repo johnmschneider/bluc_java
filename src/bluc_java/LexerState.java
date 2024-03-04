@@ -50,7 +50,14 @@ public class LexerState
     @Getter
     @Setter
     private int lineNum;
-    
+
+    /**
+     * The total number of lines of the original input that we're lexing.
+     */
+    @Getter
+    @Setter
+    private int lineCount;
+
     /**
      * The current column that the lexer is on.
      */
@@ -70,14 +77,14 @@ public class LexerState
      */
     @Getter
     @Setter
-    private boolean inString;
+    private boolean isInString;
     
     /**
      * Whether or not the last character was an escape sequence for a string.
      */
     @Getter
     @Setter
-    private boolean lastCharWasEscape;
+    private boolean wasLastCharEscape;
     
     /**
      * Whether we are on the first char of a potentially multi-char token, and
@@ -85,7 +92,7 @@ public class LexerState
      */
     @Getter
     @Setter
-    private boolean checkNextToken;
+    private boolean doCheckNextToken;
     
     /**
      * The current text of the token we've parsed so far.
@@ -93,17 +100,41 @@ public class LexerState
     @Getter
     @Setter
     private String wordSoFar;
-    
+
     public LexerState()
     {
         this.lexedTokens = new ArrayList<>();
         this.lineNum = 1;
-        this.checkNextToken = false;
+        this.doCheckNextToken = false;
         this.resetWordSoFar();
     }
     
     /**
-     * Adds a token to <see cref="lexedTokens/>
+     * @return true if the lexer is on the last line of input, false otherwise.
+     */
+    public boolean isOnLastLine()
+    {
+        return this.lineNum() == this.lineCount();
+    }
+
+    /**
+     * @return true if the lexer is on the last character of the current line, false otherwise.
+     */
+    public boolean isOnLastCharOfLine()
+    {
+        return this.column() == this.line().length();
+    }
+
+    /**
+     * @return true if the lexer is at the end of the file, false otherwise.
+     */
+    public boolean isAtEOF()
+    {
+        return this.isOnLastLine() && this.isOnLastCharOfLine();
+    }
+
+    /**
+     * Adds a token to @see LexerState.lexedTokens.
      */
     public void appendLexedToken(Token token)
     {
@@ -189,18 +220,27 @@ public class LexerState
      * It's not a requirement to call this method specifically, this is only
      *  a utility method. You can call the setters of the individual booleans
      *  if you need to.
+     * @param inString - true if the lexer is currently inside of a string
+     *  literal.
+     * @param doCheckNextToken - true if, during lexing, we should check the
+     *  following token after this one. This is in-cas we have a multi-glyph
+     *  lexeme.
+     * @param wasLastCharEscape - true if the last char was the "escape" char
+     *  for a string (i.e., the equivalent of "\" in Java).
+     * @param doResetWordSoFar - true if this function should reset the state's
+     *  "wordSoFar".
      */
     public void prepareForNextToken(
         boolean inString,
-        boolean checkNextToken,
-        boolean lastCharWasEscape,
-        boolean resetWordSoFar)
+        boolean doCheckNextToken,
+        boolean wasLastCharEscape,
+        boolean doResetWordSoFar)
     {
-        this.inString(inString);
-        this.checkNextToken(checkNextToken);
-        this.lastCharWasEscape(lastCharWasEscape);
+        this.isInString(inString);
+        this.doCheckNextToken(doCheckNextToken);
+        this.wasLastCharEscape(wasLastCharEscape);
         
-        if (resetWordSoFar)
+        if (doResetWordSoFar)
         {
             this.resetWordSoFar();
         }
