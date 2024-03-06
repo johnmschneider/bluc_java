@@ -106,7 +106,7 @@ public class LexedTokenBuilder
         // Assume that the lexer won't fail, since we're just testing.
         var newLexedTokens
                 = new Lexer()
-                .lexFile(unlexedLines)
+                .lexString(unlexedLines)
                 .data(); 
         
         // Remove the SOF and EOF tokens, since we already add them in this

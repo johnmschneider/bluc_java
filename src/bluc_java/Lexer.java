@@ -41,34 +41,13 @@ public class Lexer
     }
     
     /**
-     * Adds newlines back to the contents of the file. This simplifies the
-     *  lexing of the file, so that we can just split on white space.
-     * 
-     * @return The contents of the file with \n added at the
-     *  end of each line.
-     */
-    private ArrayList<String> addNewlinesBackToFileContents(
-        List<String> currentContentsOfFile)
-    {
-        var contentsWithNewline = new ArrayList<String>();
-        
-        for (var line : currentContentsOfFile)
-        {
-            var lineWithNewline = line + "\n";
-            contentsWithNewline.add(lineWithNewline);
-        }
-        
-        return contentsWithNewline;
-    }
-    
-    /**
      * Reads the file at the specified file path, then lexes the file.
      * 
      * @param filePath - the file to read and lex
      */
-    public ResultType<LexErrCode, ArrayList<Token>> lexFile(String filePath)
+    public LexResult lexFile(String filePath)
     {
-        var result = new ResultType<LexErrCode, ArrayList<Token>>();
+        var result = new LexResult();
         var lexedTokens = new ArrayList<Token>();
         var absoluteFilePath = new File(filePath).getAbsolutePath();
         
@@ -78,12 +57,9 @@ public class Lexer
         {
             var allLinesOfFile
                     = Files.readAllLines(Paths.get(absoluteFilePath));
-            
-            allLinesOfFile
-                    = this.addNewlinesBackToFileContents(allLinesOfFile);
 
             var lexResult
-                    = this.lexFile(allLinesOfFile, this.state());
+                    = this.lexString(allLinesOfFile, this.state());
 
             if (lexResult.hasFailed())
             {
@@ -118,22 +94,20 @@ public class Lexer
      * @param allLinesOfFile - the file contents to lex. Each new index
      *  represents a new line in the file.
      */
-    public ResultType<LexErrCode, ArrayList<Token>> lexFile(List<String> allLinesOfFile)
+    public LexResult lexString(List<String> allLinesOfFile)
     {
-        return this.lexFile(allLinesOfFile, this.state());
+        return this.lexString(allLinesOfFile, this.state());
     }
     
-    private ResultType<LexErrCode, ArrayList<Token>> lexFile(
-        List<String> allLinesOfFile,
-        LexerState state)
+    private LexResult lexString(List<String> allLinesOfFile, LexerState state)
     {
-        var result = new ResultType<LexErrCode, ArrayList<Token>>();
+        var result = new LexResult();
         var commentsRemover = new CommentsRemover();
         var linesOfFile = commentsRemover.run(allLinesOfFile);
         
         state.appendLexedToken(Token.BLUC_SOF);
         
-        state.lineCount(linesOfFile.size());
+        state.totalLineCount(linesOfFile.size());
 
         for (var line : linesOfFile)
         {
@@ -255,6 +229,10 @@ public class Lexer
         return result;
     }
     
+    /**
+     * Lexes the current token, under the assumption that the lexer is not
+     *  currently inside of a string literal.
+     */
     private void lexWhenNotInString(LexerState state)
     {
         if (state.curCharIsWhitespace())
@@ -307,7 +285,7 @@ public class Lexer
     }
 
     @AllArgsConstructor
-    public class LexErrCode
+    public static class LexErrCode
     {
         public static final int UNEXPECTED_EOF = 0;
 
@@ -357,5 +335,12 @@ public class Lexer
                 this.errorColumn(),
                 surroundingTokens);
         }
+    }
+    
+    /**
+     * Shorthand alias for ResultType<LexErrCode, ArrayList<Token>>
+     */
+    public static class LexResult extends ResultType<LexErrCode, ArrayList<Token>>
+    {
     }
 }

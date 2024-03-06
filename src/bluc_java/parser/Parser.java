@@ -480,7 +480,7 @@ public class Parser
     }
     
     /**
-     * Class for restoring the result of the parser function. Shorthand for
+     * Class for storing the result of the parser function. Shorthand for
      *  ResultType<ParseResultErrCode, ArrayList<Stmt>>.
      */
     public static class ParseResult
