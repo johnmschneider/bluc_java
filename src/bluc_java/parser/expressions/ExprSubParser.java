@@ -15,6 +15,7 @@
  */
 package bluc_java.parser.expressions;
 
+import bluc_java.ResultType;
 import bluc_java.parser.Parser;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,14 +38,15 @@ public abstract class ExprSubParser
      */
     @Getter
     private int precedence;
-    
-    public ExprSubParser(Parser parser, ExprParser exprParser)
+
+    protected ExprSubParser(Parser parser, ExprParser exprParser, int precedence)
     {
         this.parser = parser;
         this.exprParser = exprParser;
-        ExprParserRegistry.registerTypeIfNotRegisteredAlready(this);
+        this.precedence = precedence;
+        ExprSubparserContainer.registerTypeIfNotRegisteredAlready(this);
     }
-    
+
     /**
      * Creates a new, blank sub parser.
      */
@@ -52,8 +54,39 @@ public abstract class ExprSubParser
         Parser parser, ExprParser exprParser);
     
     /**
+     * Returns true if the current expression can be parsed by this sub-parser.
+     * 
+     * This should be a relatively quick operation, as it is called frequently.
+     */
+    public abstract boolean canParseCurrentExpression();
+
+    /**
      * Tries to parse the current tokens with the sub-parsers implementation of
      *  the parse function. Returns null if it's not successful.
      */
-    public abstract Expr parse();
+    public abstract ExprParserResult parse();
+
+    /**
+     * Short-hand for ResultType<ExprParserErrCode, Expr>.
+     */
+    public static class ExprParserResult extends ResultType<ExprParserErrCode, Expr>
+    {
+
+    }
+
+    public static class ExprParserErrCode
+    {
+        @Getter
+        @Setter
+        private String message;
+
+        @Getter
+        @Setter
+        private int errCode;
+
+        public String getMessage()
+        {
+            return message;
+        }
+    }
 }

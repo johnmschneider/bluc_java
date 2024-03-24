@@ -15,6 +15,7 @@
  */
 package bluc_java.parser;
 
+import bluc_java.parser.statements.StmtSubparser;
 import bluc_java.LogFormatter;
 import bluc_java.Result;
 import bluc_java.ResultType;
@@ -261,6 +262,31 @@ public class Parser
         return token;
     }
     
+    /**
+     * Attempts to advance the parser to the next token, and returns the
+     *   token the parser was on before advancing.
+     */
+    public ConsumeResult consumeCurrentToken()
+    {
+        var result
+                = new ConsumeResult();
+        var currentToken
+                = this.currentToken();
+        var nextTokenResult
+                = this.nextToken();
+        
+        if (nextTokenResult.hasFailed())
+        {
+            result.error(currentToken, nextTokenResult.errCode());
+        }
+        else
+        {
+            result.data(currentToken);
+        }
+        
+        return result;
+    }
+
     /**
      * Attempts to advance the parser to the next token. This may fail if we're
      *  at the end of the file.
@@ -564,5 +590,14 @@ public class Parser
     public enum AdvanceParserErrCode
     {
         AT_EOF;
+    }
+
+    /**
+     * Class for storing the result of the Consume function. Shorthand for
+     *  ResultType<NextTokenErrCode, Token>.
+     */
+    public static class ConsumeResult extends ResultType<NextTokenErrCode, Token>
+    {
+
     }
 }

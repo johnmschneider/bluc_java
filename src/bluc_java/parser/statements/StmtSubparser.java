@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package bluc_java.parser;
+package bluc_java.parser.statements;
 
 import bluc_java.ResultType;
+import bluc_java.parser.Parser;
 import bluc_java.parser.statements.Stmt;
 import java.util.ArrayList;
 import lombok.AccessLevel;

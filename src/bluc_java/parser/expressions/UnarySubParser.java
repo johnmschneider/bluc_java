@@ -19,42 +19,27 @@
 package bluc_java.parser.expressions;
 
 import bluc_java.parser.Parser;
-import bluc_java.parser.expressions.Expr.Binary;
 
 /**
- * Parses "==".
+ * Parsers unary expressions.
  */
-public class EqualityParser extends ExprSubParser
+public class UnarySubParser extends ExprSubParser
 {
-    public EqualityParser(Parser parser, ExprParser exprParser)
+    public UnarySubParser(Parser parser, ExprParser exprParser)
     {
-        super(parser, exprParser, 7);
+        super(parser, exprParser, 2);
     }
-
-    @Override
-    public ExprSubParser createNewSubParser(
-        Parser parser,
-        ExprParser exprParser)
-    {
-        return new EqualityParser(parser, exprParser);
-    }
-
+    
     @Override
     public ExprParserResult parse()
     {
-        var parser
-                = this.parser();
-        ExprParserResult result
-                = null;
-        Binary data
-                = null;
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 
-        if (parser.currentTokenMatches("=="))
-        {
-            
-        }
-        
-        return result;
+    @Override
+    public ExprSubParser createNewSubParser(Parser parser, ExprParser exprParser)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override

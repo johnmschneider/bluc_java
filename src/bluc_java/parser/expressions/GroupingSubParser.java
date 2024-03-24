@@ -21,25 +21,47 @@ package bluc_java.parser.expressions;
 import bluc_java.parser.Parser;
 
 /**
- * Parsers unary expressions.
+ * A sub-parser for parsing "grouping" (parenthesis) expressions.
  */
-public class UnaryParser extends ExprSubParser
+public class GroupingSubParser extends ExprSubParser
 {
-    public UnaryParser(Parser parser, ExprParser exprParser)
+    public GroupingSubParser(Parser parser, ExprParser exprParser)
     {
-        super(parser, exprParser);
+        super(parser, exprParser, 1);
     }
     
     @Override
-    public Expr parse()
+    public boolean canParseCurrentExpression()
     {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        var parser
+                = this.parser();
+        return parser.currentTokenMatches("(");
+    }
+
+    /**
+     * Parses the current expression. <br/><br/>
+     * 
+     * <b>Pre-condition:</b> This method assumes that {@link #canParseCurrentExpression()} is true.
+     * 
+     * @return The parsed expression, or an error code if the expression could not be parsed.
+     */
+    @Override
+    public ExprParserResult parse()
+    {
+        var result
+                = new ExprParserResult();
+        var parser
+                = this.parser();
+
+        var openParenthesis
+                = parser.currentToken();
+
+        return result;
     }
 
     @Override
     public ExprSubParser createNewSubParser(Parser parser, ExprParser exprParser)
     {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return new GroupingSubParser(parser, exprParser);
     }
-    
 }

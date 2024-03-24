@@ -17,12 +17,13 @@ package bluc_java.parser.expressions;
 
 import bluc_java.parser.Parser;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Container for storing an instance of each expression sub-parser. Used
  *  for instantiating one of each type of sub-parser.
  */
-public class ExprParserRegistry
+public class ExprSubparserContainer
 {
     /**
      * All registered sub-parsers.
@@ -31,19 +32,29 @@ public class ExprParserRegistry
     
     static
     {
-        ExprParserRegistry.allSubParsers = new ArrayList<>();
+        ExprSubparserContainer.allSubParsers = new ArrayList<>();
+
+        // Register all sub-parsers here
+        var subparsers = List.of(
+            new EqualityParser(null, null),
+            new UnarySubParser(null, null),
+            new GroupingSubParser(null, null));
+
+        ExprSubparserContainer
+            .allSubParsers
+            .addAll(subparsers);
     }
     
     /**
      * Creates an ArrayList with new sub-parsers for all sub-parser types.
      */
-    public ArrayList<ExprSubParser> createSubParsers(
+    public ArrayList<ExprSubParser> createDefaultSubparsers(
         Parser parser,
         ExprParser exprParser)
     {
         var newSubParsers = new ArrayList<ExprSubParser>();
                 
-        for (var subParser : ExprParserRegistry.allSubParsers)
+        for (var subParser : ExprSubparserContainer.allSubParsers)
         {
             newSubParsers.add(
                 subParser.createNewSubParser(parser, exprParser));
@@ -59,7 +70,7 @@ public class ExprParserRegistry
     public static void registerTypeIfNotRegisteredAlready(
         ExprSubParser subParser)
     {
-        var allSubParsers = ExprParserRegistry.allSubParsers;
+        var allSubParsers = ExprSubparserContainer.allSubParsers;
         
         if (!allSubParsers.contains(subParser))
         {

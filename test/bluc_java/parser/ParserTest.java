@@ -1271,4 +1271,72 @@ public class ParserTest
 
         assertEquals(expResult, result);
     }
+
+    /**
+     * Test of consumeCurrentToken method, of class Parser.
+     * 
+     * This tests that, when the parser is on a valid index to advance, the
+     *  correct token is returned.
+     */
+    @Test
+    public void consumeCurrentToken_validIndexReturnsToken()
+    {
+        System.out.println("consumeCurrentToken - valid index returns token");
+
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var expResult
+                = new Token(testFileName, 1, 18, "burritos");
+        var testTokens
+                = builder
+                .addTokens("Some")
+                .addToken(expResult)
+                .addTokens("sound good right now")
+                .build();
+
+        var instance = new Parser(testTokens);
+
+        // Advance to the token we want to consume
+        instance.nextToken(2);
+
+        var result = instance.consumeCurrentToken();
+
+        assertEquals(expResult, result.data());
+    }
+
+    /**
+     * Test of consumeCurrentToken method, of class Parser.
+     * 
+     * This tests that, when the parser is on a valid index to advance, the
+     *  parser actually advances.
+     */
+    @Test
+    public void consumeCurrentToken_validIndexAdvancesParser()
+    {
+        System.out.println("consumeCurrentToken - valid index advances parser");
+
+        var testFileName
+                = "junit4_fake_test.txt";
+        var builder
+                = new LexedTokenBuilder(testFileName);
+        var expResult
+                = "sound";
+        var testTokens
+                = builder
+                .addTokens("Some burittos sound good right now")
+                .build();
+
+        var instance = new Parser(testTokens);
+
+        // Advance to the token we want to consume
+        instance.nextToken(2);
+
+        instance.consumeCurrentToken();
+
+        var result = instance.currentToken();
+
+        assertEquals(expResult, result.text());
+    }
 }
