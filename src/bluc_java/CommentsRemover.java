@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Removes comments from a source file so we only have to process
+ * Removes comments from a source file so we only have to process actual code.
  */
 public class CommentsRemover
 {

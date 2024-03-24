@@ -56,7 +56,7 @@ public class LexerState
      */
     @Getter
     @Setter
-    private int lineCount;
+    private int totalLineCount;
 
     /**
      * The current column that the lexer is on.
@@ -114,7 +114,7 @@ public class LexerState
      */
     public boolean isOnLastLine()
     {
-        return this.lineNum() == this.lineCount();
+        return this.lineNum() == this.totalLineCount();
     }
 
     /**
@@ -194,14 +194,15 @@ public class LexerState
     }
     
     /**
-     * Appends the wordSoFar to lexedTokens if wordSoFar isn't just
-     *  white space.
+     * Appends the wordSoFar to lexedTokens if wordSoFar isn't just white space.
+     *  Newlines are still appended, in order to more easily debug the emitted
+     *  IR code.
      */
     public void appendTokenIfNotWhitespace()
     {
         var wordSoFar = this.wordSoFar();
         
-        if (!wordSoFar.isBlank())
+        if (wordSoFar.contains("\n") || !wordSoFar.isBlank())
         {
             var token = new Token();
             token.filePath(this.filePath());
