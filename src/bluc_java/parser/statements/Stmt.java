@@ -18,10 +18,55 @@
  */
 package bluc_java.parser.statements;
 
+import java.util.ArrayList;
+import lombok.AccessLevel;
+
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Represents a statement in the abstract syntax tree (AST).
  */
 public class Stmt
 {
-    
+    /**
+     * The type of statement this is (method, class, etc).
+     */
+    @Getter
+    @Setter
+    private StmtType type;
+
+    /**
+     * The parent node of this statement. For instance, a "class" Stmt would
+     *  be the parent of a "method".
+     */
+    @Getter
+    @Setter
+    private Stmt parent;
+
+    /**
+     * The children nodes of this statement. For instance, a "class" Stmt may have multiple
+     *  "method" children. It may also have several types of children, such as "Field"
+     *  statements.<br/><br/>
+     * 
+     * It may also have <b>no</b> children, in which case the list is still initialized,
+     *  but is empty.
+     */
+    @Getter
+    @Setter(AccessLevel.PRIVATE)
+    private ArrayList<Stmt> children;
+
+
+    /**
+     * Creates a new statement with the given type and parent.
+     * 
+     * @param type The type of statement this is (method, class, etc).
+     * @param parent The parent statement of this statement.
+     */
+    public Stmt(StmtType type, Stmt parent)
+    {
+        this.type = type;
+        this.parent = parent;
+        this.children = new ArrayList<>();
+    }
 }

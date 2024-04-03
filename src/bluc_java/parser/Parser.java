@@ -16,6 +16,7 @@
 package bluc_java.parser;
 
 import bluc_java.parser.statements.StmtSubparser;
+import bluc_java.parser.statements.StmtType;
 import bluc_java.LogFormatter;
 import bluc_java.Result;
 import bluc_java.ResultType;
@@ -61,14 +62,6 @@ public class Parser
     private ArrayList<Stmt> ast;
     
     /**
-     * True if the current token is on a line which is part of
-     *  a multi-line statement.
-     */
-    @Getter
-    @Setter(AccessLevel.PRIVATE)
-    private boolean isMultilineStmt;
-    
-    /**
      * "True" if the .parse function was already called and has completed.
      * 
      * Parser objects are single-use so that we don't have to deep copy the AST.
@@ -83,7 +76,6 @@ public class Parser
     @Getter(AccessLevel.PRIVATE)
     @Setter(AccessLevel.PRIVATE)
     private StmtSubparser stmtParser;
-    
     
     public Parser(ArrayList<Token> lexedTokens)
     {
@@ -218,13 +210,6 @@ public class Parser
         
         this.currentTokenIndex(index);
         this.currentToken = lexedTokens.get(index);
-        
-        if (this.currentToken.lineNum() != startLineNum)
-        {
-            // Reset our multi-line statement flag as we're on a
-            //  different line now
-            this.isMultilineStmt(false);
-        }
     }
     
     /**
@@ -265,19 +250,35 @@ public class Parser
     /**
      * Attempts to advance the parser to the next token, and returns the
      *   token the parser was on before advancing.
+     * 
+     * @param expectedToken The text of the token that the parser is expected to be on. If
+     *      the parser is not on this token, an error is returned.
+     * @return The token the parser was on before advancing.
      */
-    public ConsumeResult consumeCurrentToken()
+    public ConsumeResult consumeCurrentToken(String expectedToken)
     {
         var result
                 = new ConsumeResult();
         var currentToken
                 = this.currentToken();
+
+        if (!currentToken.matches(expectedToken))
+        {
+            result.error(currentToken, ConsumeResultErrCode.TOKEN_DOESNT_MATCH);
+            return result;
+        }
+
         var nextTokenResult
                 = this.nextToken();
         
         if (nextTokenResult.hasFailed())
         {
-            result.error(currentToken, nextTokenResult.errCode());
+            var castedErrCode
+                    = ConsumeResultErrCode
+                    .castToConsumeError(
+                        nextTokenResult.errCode());
+
+            result.error(currentToken, castedErrCode);
         }
         else
         {
@@ -515,7 +516,7 @@ public class Parser
 
     }
     
-    public enum ParseResultErrCode
+    public static enum ParseResultErrCode
     {
         /**
          * Indicates that the .parse function was already called and has
@@ -533,14 +534,8 @@ public class Parser
         FATAL_UNKNOWN_ERROR,
     }
     
-    public enum NextTokenErrCode
+    public static enum NextTokenErrCode
     {
-        /**
-         * Indicates that tokens were found on the same line *after* the
-         *  multi-line delimiter was encountered for that line.
-         */
-        TOKENS_AFTER_MUTLILINE_DELIMITER,
-        
         /**
          * Indicates that the parser reached the end of the file when it was
          *  expecting more tokens.
@@ -592,11 +587,65 @@ public class Parser
         AT_EOF;
     }
 
+    public static enum ConsumeResultErrCode
+    {
+        /**
+         * Indicates that the parser reached the end of the file when it was
+         *  expecting more tokens.
+         */
+        AT_EOF,
+
+        /**
+         * Indicates that the parser's current token was not the expected token.
+         */
+        TOKEN_DOESNT_MATCH,
+
+        /**
+         * Indicates a fatal compiler error that occurred as a result of an
+         *  unknown ResultType failure code.
+         */
+        FATAL_UNKNOWN_ERROR;
+
+        @Getter
+        @Setter
+        private String errorMessage;
+
+        public static ConsumeResultErrCode castToConsumeError(
+            NextTokenErrCode error)
+        {
+            ConsumeResultErrCode castedError;
+            
+            switch (error)
+            {       
+                case AT_EOF:
+                    castedError = ConsumeResultErrCode.AT_EOF;
+                    castedError.errorMessage("The parser reached the end of the file when it was expecting more tokens.");
+                    break;
+                    
+                default:
+                    // This should never happen, so embed the function name in
+                    //  the error message.
+                    var errorMessage = LogFormatter.formatCompilerError(
+                        Utils.getCurrentMethodName(),
+                                
+                        "Unknown NextTokenError type `" + error.name()
+                        + "`");
+                    
+                    castedError = ConsumeResultErrCode.FATAL_UNKNOWN_ERROR;
+                    castedError.errorMessage(errorMessage);
+                    
+                    break;
+            }
+            
+            return castedError;
+        }
+    }
+
     /**
      * Class for storing the result of the Consume function. Shorthand for
      *  ResultType<NextTokenErrCode, Token>.
      */
-    public static class ConsumeResult extends ResultType<NextTokenErrCode, Token>
+    public static class ConsumeResult extends ResultType<ConsumeResultErrCode, Token>
     {
 
     }

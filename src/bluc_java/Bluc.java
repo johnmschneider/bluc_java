@@ -52,6 +52,10 @@ public class Bluc
         Bluc.printLexerOutput(tokens);
         
         var parser = new Parser(tokens);
+
+        // TODO - remove this once the statement parser for classes is implemented
+        parser.context().isInsideClass(true);
+
         parser.parse();
     }
     

@@ -39,7 +39,10 @@ public class StmtSubparser
     private Parser parser;
     
     /**
-     * Tries to parse the current statement that the parser is on.
+     * Tries to parse the current statement that the parser is on. <br/><br/>
+     * 
+     * <b>Post-condition:</b> The parser will be on the next token after the
+     *  statement if the statement was successfully parsed.
      */
     public StmtParseResult tryParseStmt()
     {

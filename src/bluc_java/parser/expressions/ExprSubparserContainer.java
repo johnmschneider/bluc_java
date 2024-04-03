@@ -62,19 +62,4 @@ public class ExprSubparserContainer
         
         return newSubParsers;
     }
-    
-    /**
-     * Registers the type of the specified sub-parser (only if it hasn't been
-     *  registered previously)
-     */
-    public static void registerTypeIfNotRegisteredAlready(
-        ExprSubParser subParser)
-    {
-        var allSubParsers = ExprSubparserContainer.allSubParsers;
-        
-        if (!allSubParsers.contains(subParser))
-        {
-            allSubParsers.add(subParser);
-        }
-    }
 }

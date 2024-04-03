@@ -1287,13 +1287,11 @@ public class ParserTest
                 = "junit4_fake_test.txt";
         var builder
                 = new LexedTokenBuilder(testFileName);
-        var expResult
-                = new Token(testFileName, 1, 18, "burritos");
+        var expResult 
+                = "sound";
         var testTokens
                 = builder
-                .addTokens("Some")
-                .addToken(expResult)
-                .addTokens("sound good right now")
+                .addTokens("Some burittos sound good right now")
                 .build();
 
         var instance = new Parser(testTokens);
@@ -1301,12 +1299,14 @@ public class ParserTest
         // Advance to the token we want to consume
         instance.nextToken(2);
 
-        var result = instance.consumeCurrentToken();
-
-        assertEquals(expResult, result.data());
+        instance.consumeCurrentToken("burittos");
+        
+        var result = instance.currentToken();
+        
+        assertEquals(expResult, result.text());
     }
 
-    /**
+    /**`
      * Test of consumeCurrentToken method, of class Parser.
      * 
      * This tests that, when the parser is on a valid index to advance, the
@@ -1333,7 +1333,7 @@ public class ParserTest
         // Advance to the token we want to consume
         instance.nextToken(2);
 
-        instance.consumeCurrentToken();
+        instance.consumeCurrentToken("burittos");
 
         var result = instance.currentToken();
 

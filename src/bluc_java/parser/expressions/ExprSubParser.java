@@ -44,7 +44,6 @@ public abstract class ExprSubParser
         this.parser = parser;
         this.exprParser = exprParser;
         this.precedence = precedence;
-        ExprSubparserContainer.registerTypeIfNotRegisteredAlready(this);
     }
 
     /**
@@ -54,11 +53,12 @@ public abstract class ExprSubParser
         Parser parser, ExprParser exprParser);
     
     /**
-     * Returns true if the current expression can be parsed by this sub-parser.
+     * Returns true if the current token is recognized as a valid starting token
+     *  by this sub-parser.
      * 
      * This should be a relatively quick operation, as it is called frequently.
      */
-    public abstract boolean canParseCurrentExpression();
+    public abstract boolean canStartParsingOnThisToken();
 
     /**
      * Tries to parse the current tokens with the sub-parsers implementation of
@@ -69,13 +69,15 @@ public abstract class ExprSubParser
     /**
      * Short-hand for ResultType<ExprParserErrCode, Expr>.
      */
-    public static class ExprParserResult extends ResultType<ExprParserErrCode, Expr>
+    public static class ExprParserResult extends ResultType<ExprSubParserErrCode, Expr>
     {
 
     }
 
-    public static class ExprParserErrCode
+    public static enum ExprSubParserErrCode
     {
+        MISSING_CLOSING_PARENTHESIS;
+
         @Getter
         @Setter
         private String message;

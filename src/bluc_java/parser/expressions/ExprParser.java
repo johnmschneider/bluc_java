@@ -15,10 +15,33 @@
  */
 package bluc_java.parser.expressions;
 
+import bluc_java.ResultType;
+import bluc_java.parser.expressions.ExprSubParser.ExprSubParserErrCode;
+
 /**
  * Logic for parsing expressions.
  */
 public class ExprParser
 {
     
+    /**
+     * Tries to parse the current expression that the parser is on. <br/><br/>
+     * 
+     * <b>Post-conditions:</b> The parser will be on the next token after the
+     *  statement if the statement was successfully parsed.
+     */
+    public ExprParserResult tryParseExpr()
+    {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Class for storing the result of parsing an expression.
+     * 
+     * Short-hand for {@link ResultType} with the error code {@link ExprSubParserErrCode} and the result type {@link Expr}.
+     */
+    public static class ExprParserResult extends ResultType<ExprSubParserErrCode, Expr>
+    {
+
+    }
 }

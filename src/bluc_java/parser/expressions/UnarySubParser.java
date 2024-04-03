@@ -43,7 +43,7 @@ public class UnarySubParser extends ExprSubParser
     }
 
     @Override
-    public boolean canParseCurrentExpression() {
+    public boolean canStartParsingOnThisToken() {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
     

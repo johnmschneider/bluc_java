@@ -31,17 +31,41 @@ public class GroupingSubParser extends ExprSubParser
     }
     
     @Override
-    public boolean canParseCurrentExpression()
+    public boolean canStartParsingOnThisToken()
     {
-        var parser
-                = this.parser();
-        return parser.currentTokenMatches("(");
+        var parser  = this.parser();
+
+        if (parser.currentTokenMatches("("))
+        {
+            return false;
+        }
+
+        var context = parser.context();
+
+        // checks if the parenthesis is in a valid location
+        //  for this symbol to be a grouping expression
+        var symbolIsInValidLocation 
+                = context.isInsideField()
+
+                || context.isInsideMethodBlock()
+                || context.isInsideLambdaBlock()
+
+                || context.isInsideConstructorBlock()
+                || context.isInsideStaticConstructorBlock()
+
+                || context.isInsideAttemptBlock()
+                || context.isInsideCatchBlock();
+
+        return symbolIsInValidLocation;
     }
 
     /**
      * Parses the current expression. <br/><br/>
      * 
-     * <b>Pre-condition:</b> This method assumes that {@link #canParseCurrentExpression()} is true.
+     * <b>Pre-conditions:</b> This method assumes that {@link #canStartParsingOnThisToken()} is true. <br/><br/>
+     * 
+     * <b>Post-conditions:</b> The parser will be on the next token after the
+     *  statement IFF the statement was successfully parsed.
      * 
      * @return The parsed expression, or an error code if the expression could not be parsed.
      */
@@ -54,8 +78,29 @@ public class GroupingSubParser extends ExprSubParser
                 = this.parser();
 
         var openParenthesis
-                = parser.currentToken();
+                = parser
+                .consumeCurrentToken("(")
+                .data();
 
+        // Parse the expression inside the parenthesis
+        var innerExprResult
+                = this.exprParser().tryParseExpr();
+        
+        if (innerExprResult.hasFailed())
+        {
+            result.errCode(innerExprResult.errCode());
+            return result;
+        }
+
+        var consumeResult
+                = parser.consumeCurrentToken(")");
+
+        if (consumeResult.hasFailed())
+        {
+            result.errCode(ExprSubParserErrCode.MISSING_CLOSING_PARENTHESIS);
+            return result;
+        }
+        
         return result;
     }
 
