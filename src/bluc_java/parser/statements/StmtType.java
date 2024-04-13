@@ -103,7 +103,7 @@ public enum StmtType
     /**
      * Whether or not we are currently parsing the inside of an "attempt" (try) block.
      */
-    ATTMEPT_BLOCK,
+    ATTEMPT_BLOCK,
 
     /**
      * Whether or not we are currently parsing the inside of a "catch" parameter list.
@@ -156,6 +156,11 @@ public enum StmtType
     LAMBDA_BLOCK,
 
     /**
+     * Whether or not we are currently parsing the inside of a lambda call (right after the -> part).
+     */
+    LAMBDA_CALL,
+
+    /**
      * Whether or not we are currently parsing the inside of a block.<br/><br/>
      * 
      * <b>Remarks:</b><br/>
@@ -177,7 +182,7 @@ public enum StmtType
     /**
      * Whether or not we are currently parsing the inside of a while block parameter list.
      */
-    WHILE_PARAMETERS,
+    WHILE_CONDITION,
 
     /**
      * Whether or not we are currently parsing the inside of a while loop.
@@ -187,10 +192,35 @@ public enum StmtType
     /**
      * Whether or not we are currently parsing the inside of a for loop parameter list.
      */
-    FOR_BLOCK_PARAMETERS,
+    FOR_CONDITION,
 
     /**
      * Whether or not we are currently parsing the inside of a for loop.
      */
     FOR_BLOCK,
+
+    /**
+     * Whether or not we are currently parsing the inside of the condition of an if block.
+     */
+    IF_CONDITION,
+
+    /**
+     * Whether or not we are currently parsing the inside of an if block.
+     */
+    IF_BLOCK,
+
+    /**
+     * Whether or not we are currently parsing the inside of an else block.
+     */
+    ELSE_BLOCK,
+
+    /**
+     * Whether or not we are currently parsing the inside of the condition of an else-if block.
+     */
+    ELSE_IF_CONDITION,
+
+    /**
+     * Whether or not we are currently parsing the inside of an else-if block.
+     */
+    ELSE_IF_BLOCK,
 }

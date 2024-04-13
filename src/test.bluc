@@ -43,3 +43,4 @@ fn test2(int a, int b)
     # test a function with params
     a + b;
 }
+

@@ -16,14 +16,23 @@
 package bluc_java.parser.expressions;
 
 import bluc_java.ResultType;
+import bluc_java.parser.Parser;
 import bluc_java.parser.expressions.ExprSubParser.ExprSubParserErrCode;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Logic for parsing expressions.
  */
+@AllArgsConstructor
 public class ExprParser
 {
-    
+    @Getter(AccessLevel.PRIVATE)
+    @Setter(AccessLevel.PRIVATE)
+    private Parser parser;
+
     /**
      * Tries to parse the current expression that the parser is on. <br/><br/>
      * 

@@ -18,6 +18,8 @@
  */
 package bluc_java;
 
+import javax.lang.model.type.ErrorType;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,7 +30,6 @@ import lombok.experimental.Accessors;
  * 
  * Base class of all ResultType's.
  */
-@Accessors(fluent = true)
 public class Result<ErrorType>
 {
     /**
@@ -69,6 +70,8 @@ public class Result<ErrorType>
      * Set the error code for this result.
      * 
      * If this method is called, the success flag is also set to false.
+     * 
+     * @param errCode - The error code to set.
      */
     public void errCode(ErrorType errCode)
     {

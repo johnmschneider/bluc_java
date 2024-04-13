@@ -19,6 +19,8 @@
 package bluc_java.parser.expressions;
 
 import bluc_java.parser.Parser;
+import bluc_java.parser.statements.StmtType;
+import static bluc_java.parser.expressions.Expr.Grouping;
 
 /**
  * A sub-parser for parsing "grouping" (parenthesis) expressions.
@@ -40,21 +42,50 @@ public class GroupingSubParser extends ExprSubParser
             return false;
         }
 
-        var context = parser.context();
+        var parentNodeType
+                = parser
+                .getNodeThatsBeingProcessed()
+                .type();
 
         // checks if the parenthesis is in a valid location
-        //  for this symbol to be a grouping expression
-        var symbolIsInValidLocation 
-                = context.isInsideField()
+        // for this symbol to be a grouping expression
+        var symbolIsInValidLocation = false;
+        switch (parentNodeType)
+        {
+            case CLASS_FIELD:
 
-                || context.isInsideMethodBlock()
-                || context.isInsideLambdaBlock()
+            // methods / method-like things
+            case METHOD_BLOCK:
+            case LAMBDA_BLOCK:
 
-                || context.isInsideConstructorBlock()
-                || context.isInsideStaticConstructorBlock()
+            // constructors
+            case CONSTRUCTOR_BLOCK:
+            case STATIC_CONSTRUCTOR_BLOCK:
+            
+            // error type blocks
+            case ATTEMPT_BLOCK:
+            case CATCH_BLOCK:
 
-                || context.isInsideAttemptBlock()
-                || context.isInsideCatchBlock();
+            // branches
+            case IF_CONDITION:
+            case IF_BLOCK:
+            case ELSE_BLOCK:
+            case ELSE_IF_CONDITION:
+            case ELSE_IF_BLOCK:
+
+            // loops
+            case WHILE_CONDITION:
+            case WHILE_BLOCK:
+            case FOR_CONDITION:
+            case FOR_BLOCK:
+                symbolIsInValidLocation = true;
+                break;
+
+
+            default:
+                symbolIsInValidLocation = false;
+                break;
+        }
 
         return symbolIsInValidLocation;
     }
@@ -72,37 +103,40 @@ public class GroupingSubParser extends ExprSubParser
     @Override
     public ExprParserResult parse()
     {
-        var result
-                = new ExprParserResult();
-        var parser
-                = this.parser();
+        var result      = new ExprParserResult();
+        var parser      = this.parser();
+        var exprParser  = this.exprParser();
 
-        var openParenthesis
-                = parser
-                .consumeCurrentToken("(")
-                .data();
+        // Assume this token is valid, as "canStartParsingOnThisToken" should have been called first.
+        var openParenthesis = parser.consumeCurrentToken("(").data();
 
         // Parse the expression inside the parenthesis
-        var innerExprResult
-                = this.exprParser().tryParseExpr();
-        
-        if (innerExprResult.hasFailed())
+        var innerExprResult = exprParser.tryParseExpr();
+        var innerExprHasParseError = innerExprResult.hasFailed();
+
+        if (innerExprHasParseError)
         {
             result.errCode(innerExprResult.errCode());
             return result;
         }
 
-        var consumeResult
-                = parser.consumeCurrentToken(")");
+        var closingParenthesisResult = parser.consumeCurrentToken(")");
+        var closingParenthesisNotFound = closingParenthesisResult.hasFailed();
 
-        if (consumeResult.hasFailed())
+        if (closingParenthesisNotFound)
         {
             result.errCode(ExprSubParserErrCode.MISSING_CLOSING_PARENTHESIS);
             return result;
         }
         
+        result.data(new Grouping(
+                        openParenthesis,
+                        innerExprResult.data(),
+                        closingParenthesisResult.data()));
+        
         return result;
     }
+
 
     @Override
     public ExprSubParser createNewSubParser(Parser parser, ExprParser exprParser)

@@ -59,7 +59,7 @@ public abstract class Expr
         
         @Getter
         @Setter
-        private Expr closeParenthesis;
+        private Token closeParenthesis;
         
         public <T> T accept(Visitor<T> visitor)
         {

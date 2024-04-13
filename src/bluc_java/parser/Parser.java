@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import bluc_java.parser.statements.TopLevelStmt;
 
 
 /**
@@ -59,7 +60,7 @@ public class Parser
      */
     @Getter(AccessLevel.PRIVATE)
     @Setter(AccessLevel.PRIVATE)
-    private ArrayList<Stmt> ast;
+    private TopLevelStmt astRoot;
     
     /**
      * "True" if the .parse function was already called and has completed.
@@ -80,12 +81,46 @@ public class Parser
     public Parser(ArrayList<Token> lexedTokens)
     {
         this.lexedTokens        = lexedTokens;
-        this.ast                = new ArrayList<>();
+        this.astRoot            = new TopLevelStmt();
         this.currentTokenIndex  = 0;
         this.currentToken       = this.lexedTokens.get(0);
         this.stmtParser         = new StmtSubparser(this);
     }
+
+    public TopLevelStmt unitTest_getAstRoot()
+    {
+        return this.astRoot();
+    }
     
+    /**
+     * @return The AST node that we're currently processing. This is equivalent
+     *  to the last child of the last child (recursively) of the AST root.
+     */
+    public Stmt getNodeThatsBeingProcessed()
+    {
+        Stmt currentParent = this.astRoot;
+        Stmt currentChild = this.astRoot;
+
+        while (currentChild.children().size() > 0)
+        {
+            currentParent
+                    = currentChild;
+            
+            var lastElementIndex
+                    = currentChild
+                    .children()
+                    .size()
+                    - 1;
+
+            currentChild
+                    = currentChild
+                    .children()
+                    .get(lastElementIndex);
+        }
+
+        return currentParent;
+    }
+
     public String getCurrentTokenText()
     {
         return this.currentToken().text();
@@ -452,6 +487,11 @@ public class Parser
      */
     public ParseResult parse()
     {
+        // TODO - remove this once the statement parser for classes is implemented
+        this.astRoot
+            .children()
+            .add(new Stmt(StmtType.CLASS, this.astRoot));
+
         var result = new ParseResult();
         
         if (this.parserAlreadyRan())
@@ -470,7 +510,9 @@ public class Parser
             
             if (stmtResult.hasSucceeded())
             {
-                this.ast.addAll(stmtResult.data());
+                this.astRoot
+                    .children()
+                    .addAll(stmtResult.data());
             }
             else
             {
@@ -496,12 +538,11 @@ public class Parser
         var debugMessage
             = LogFormatter.formatDebug(
                 Utils.getCurrentMethodName(),
-                "ast ==\n" + this.ast);
+                "ast ==\n" + this.astRoot);
         
         System.out.println(debugMessage);
         
-        
-        result.data(this.ast);
+        result.data(this.astRoot);
         
         return result;
     }
@@ -511,7 +552,7 @@ public class Parser
      *  ResultType<ParseResultErrCode, ArrayList<Stmt>>.
      */
     public static class ParseResult
-            extends ResultType<ParseResultErrCode, ArrayList<Stmt>>
+            extends ResultType<ParseResultErrCode, TopLevelStmt>
     {
 
     }

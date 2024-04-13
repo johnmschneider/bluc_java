@@ -18,6 +18,7 @@
  */
 package bluc_java.parser;
 
+import bluc_java.IUnitTest;
 import bluc_java.Result;
 import bluc_java.Token;
 import bluc_java.parser.Parser.AdvanceParserErrCode;
@@ -35,9 +36,8 @@ import static org.junit.Assert.*;
  * 
  * @author john
  */
-public class ParserTest
+public class ParserTest implements IUnitTest
 {
-    
     public ParserTest()
     {
     }
